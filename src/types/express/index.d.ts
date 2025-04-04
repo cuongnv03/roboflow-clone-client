@@ -1,5 +1,4 @@
-import type { RowDataPacket } from 'mysql2' // Okay to import type from library
-// Import local type aliases using 'import type'
+import type { RowDataPacket } from 'mysql2'
 import type { ProjectType, SplitType, ImageStatus, DatasetStatus } from '../projectTypes'
 
 // --- Interfaces mirroring backend data structures ---
@@ -10,17 +9,6 @@ interface AuthenticatedUser {
   userId: number
   email: string
 }
-
-// Extend the Express Request interface (This part is only relevant for backend TS)
-// declare global {
-//     namespace Express {
-//         interface Request {
-//             user?: AuthenticatedUser;
-//             file?: Multer.File;
-//             files?: Multer.File[] | { [fieldname: string]: Multer.File[] };
-//         }
-//     }
-// }
 
 // --- DB Structure Interfaces (for frontend use, mirroring backend) ---
 

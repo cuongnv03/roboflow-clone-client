@@ -1,6 +1,6 @@
 <template>
-    <div>
-        <div class="flex justify-between items-center mb-6">
+    <div class="mx-auto max-w-7xl p-6 lg:px-8 mt-4">
+        <div class=" flex justify-between items-center mb-6">
             <h1 class="text-3xl font-bold text-gray-800">My Projects</h1>
             <button @click="showCreateForm = !showCreateForm" class="btn btn-primary">
                 {{ showCreateForm ? 'Cancel Create' : '+ New Project' }}
@@ -67,7 +67,9 @@
                     <span class="text-gray-300">|</span>
                     <button @click="confirmDeleteProject(project.project_id, project.name)"
                         class="text-red-600 hover:text-red-800 text-sm font-medium">Delete</button>
-                    <router-link :to="{ name: 'home' }" class="btn btn-outline text-sm py-1 px-3 ml-auto"> Open
+                    <router-link :to="{ name: 'project-upload', params: { projectId: project.project_id } }"
+                        class="btn btn-outline text-sm py-1 px-3 ml-auto">
+                        Open
                     </router-link>
                 </div>
             </div>
@@ -197,7 +199,6 @@ const openEditModal = (project: ProjectDb) => {
 
 const closeEditModal = () => {
     showEditModal.value = false;
-    // Optionally reset editingProject fields here if needed
 };
 
 const handleUpdateProject = async () => {
@@ -224,7 +225,6 @@ const confirmDeleteProject = async (projectId: number, projectName: string) => {
     if (window.confirm(`Are you sure you want to delete the project "${projectName}"? This action cannot be undone.`)) {
         try {
             await projectStore.deleteProject(projectId);
-            // Optionally show a success notification
         } catch (err: any) {
             console.error("Failed to delete project:", err);
             alert(`Error deleting project: ${err.message || 'Unknown error'}`); // Simple alert for error

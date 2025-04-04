@@ -346,31 +346,18 @@ input:focus~label,
 input:not(:placeholder-shown)~label {
   /* Adjust these values to match the desired floating effect */
   --tw-translate-y: -0.80rem;
-  /* How much to move up */
   --tw-scale-x: .75;
-  /* How much to shrink */
   --tw-scale-y: .75;
   color: #9333ea;
-  /* Use brand-purple */
-  /* Add background only if needed for overlap */
-  /* background-color: white; */
-  /* padding: 0 0.2rem; */
 }
 
-/* Optional: Add slight background to label on focus/float to cover line */
+/* Add slight background to label on focus/float to cover line */
 input:focus~label,
 input:not(:placeholder-shown)~label {
   background-color: #fff;
-  /* Match form background */
   padding-left: 0.125rem;
-  /* Adjust as needed */
   padding-right: 0.125rem;
-  /* Adjust as needed */
-  /* Ensure it's above the input border */
-  /* z-index: 10; */
-  /* Usually not needed if positioned correctly */
 }
-
 
 /* Keep the focus border style */
 input:focus {

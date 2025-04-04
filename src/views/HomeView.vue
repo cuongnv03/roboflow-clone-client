@@ -1,5 +1,5 @@
 <template>
-    <div class="text-center">
+    <div class="mx-auto max-w-7xl p-6 lg:px-8 mt-4 text-center">
         <h1 class="text-3xl font-bold text-gray-800 mb-4">Welcome to Roboflow Clone</h1>
         <p class="text-gray-600 mb-6">This is the main dashboard area (Protected Route).</p>
         <div>

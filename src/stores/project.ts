@@ -1,27 +1,20 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import axios from 'axios'
-// This import should now work after you create the file:
-import type { ProjectDb } from '@/types/express/index.d'
-// Import ProjectType from the correct file
-import type { ProjectType } from '@/types/projectTypes'
 
-// Matches backend list response structure
+import type { ProjectDb } from '@/types/express/index.d'
+import type { ProjectType } from '@/types/projectTypes'
 interface ProjectListApiResponse {
   success: boolean
   count?: number
   projects?: ProjectDb[]
   message?: string // For errors
 }
-
-// Matches backend single project response structure
 interface ProjectApiResponse {
   success: boolean
   project?: ProjectDb
   message?: string // For errors
 }
-
-// Matches simple success response (e.g., for delete)
 interface SuccessApiResponse {
   success: boolean
   message?: string
@@ -32,11 +25,14 @@ export const useProjectStore = defineStore('project', () => {
   const projects = ref<ProjectDb[]>([])
   const currentProject = ref<ProjectDb | null>(null)
   const loading = ref(false)
+  const loadingCurrent = ref(false) // Specific loading for single project fetch
   const error = ref<string | null>(null)
 
   // --- Getters ---
   const projectList = computed(() => projects.value)
+  const activeProject = computed(() => currentProject.value) // Getter for current project
   const isLoading = computed(() => loading.value)
+  const isLoadingCurrent = computed(() => loadingCurrent.value) // Getter for single project loading
   const projectError = computed(() => error.value)
 
   // --- Actions ---
@@ -64,6 +60,30 @@ export const useProjectStore = defineStore('project', () => {
       projects.value = []
     } finally {
       loading.value = false
+    }
+  }
+
+  // Fetch a single project by ID
+  async function fetchProjectById(projectId: number | string): Promise<void> {
+    loadingCurrent.value = true
+    error.value = null
+    currentProject.value = null // Clear previous project
+    console.log(`Fetching project ${projectId}...`)
+    try {
+      const response = await axios.get<ProjectApiResponse>(`/projects/${projectId}`)
+      if (response.data.success && response.data.project) {
+        currentProject.value = response.data.project
+        console.log('Current project set:', currentProject.value?.name)
+      } else {
+        throw new Error(response.data.message || `Failed to fetch project ${projectId}.`)
+      }
+    } catch (err: any) {
+      const message =
+        err.response?.data?.message || err.message || `Error fetching project ${projectId}.`
+      error.value = message
+      console.error('Fetch Project By ID API error:', err)
+    } finally {
+      loadingCurrent.value = false
     }
   }
 
@@ -106,20 +126,19 @@ export const useProjectStore = defineStore('project', () => {
     projectId: number,
     projectData: { name?: string; description?: string | null },
   ): Promise<ProjectDb | null> {
-    loading.value = true
+    loading.value = true // Use general loading for updates/deletes
     error.value = null
     console.log(`Updating project ${projectId}:`, projectData)
     try {
       const response = await axios.put<ProjectApiResponse>(`/projects/${projectId}`, projectData)
       if (response.data.success && response.data.project) {
-        // Find and update the project in the local list
         const index = projects.value.findIndex((p) => p.project_id === projectId)
         if (index !== -1) {
           projects.value[index] = { ...projects.value[index], ...response.data.project }
-        } else {
-          // If not found locally, maybe add it or just fetch again? For now, log warning.
-          console.warn(`Project ${projectId} updated successfully but not found in local list.`)
-          // Optionally fetch all projects again: await fetchProjects();
+        }
+        // Also update currentProject if it's the one being edited
+        if (currentProject.value?.project_id === projectId) {
+          currentProject.value = { ...currentProject.value, ...response.data.project }
         }
         return response.data.project
       } else {
@@ -129,7 +148,7 @@ export const useProjectStore = defineStore('project', () => {
       console.error('Update Project API error:', err)
       const message = err.response?.data?.message || err.message || 'Error updating project.'
       error.value = message
-      throw new Error(message) // Re-throw for component
+      throw new Error(message)
     } finally {
       loading.value = false
     }
@@ -164,11 +183,15 @@ export const useProjectStore = defineStore('project', () => {
     projects,
     currentProject,
     loading,
+    loadingCurrent,
     error,
     projectList,
+    activeProject,
     isLoading,
+    isLoadingCurrent,
     projectError,
     fetchProjects,
+    fetchProjectById,
     createProject,
     updateProject,
     deleteProject,

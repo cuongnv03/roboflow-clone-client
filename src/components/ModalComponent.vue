@@ -52,11 +52,9 @@ const closeModal = () => {
     emit('update:modelValue', false);
 };
 
-// Confirm action function (can be used by default OK button or overridden)
+// Confirm action function
 const confirmAction = () => {
     emit('confirm');
-    // Optionally close modal on confirm, or let parent decide
-    // closeModal();
 };
 
 // Handle Escape key press to close modal
@@ -101,7 +99,6 @@ onUnmounted(() => {
     opacity: 0;
 }
 
-/* Optional: Add transition for the modal content itself */
 .modal-fade-enter-active .relative,
 .modal-fade-leave-active .relative {
     transition: all 0.3s ease;

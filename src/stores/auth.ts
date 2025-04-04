@@ -14,8 +14,7 @@ interface AuthApiResponse {
   success: boolean
   message?: string
   token?: string
-  user?: User
-  // Add other potential fields if needed
+  user?: Use
 }
 
 // Matches the error response structure from the backend
@@ -23,11 +22,9 @@ interface ApiErrorResponse {
   success: false
   status: number
   message: string
-  stack?: string // Optional stack trace in dev
+  stack?: string
 }
 
-// --- Axios Configuration ---
-// Define the base URL for your API
 const API_BASE_URL = 'http://localhost:5000/api/v1' // Ensure this matches your backend port
 axios.defaults.baseURL = API_BASE_URL
 
@@ -39,10 +36,8 @@ const setAxiosAuthHeader = (token: string | null) => {
     axios.defaults.headers.common['Authorization'] ? 'Token present' : 'Token removed',
   )
 }
-// --- End Axios Configuration ---
 
 export const useAuthStore = defineStore('auth', () => {
-  // --- State ---
   // Initialize state from localStorage
   const token = ref<string | null>(localStorage.getItem('authToken') || null)
   const user = ref<User | null>(() => {
