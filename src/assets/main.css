@@ -2,21 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Base background color */
 body {
-  margin: 0;
-  padding: 0;
-  min-width: 0;
-  background: transparent;
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Open Sans',
-    'Helvetica Neue',
-    sans-serif;
+  @apply bg-gray-100 text-gray-900 text-base;
 }
+
+/* Custom component styles if needed */
+.sidebar {
+  @apply bg-brand-gray text-brand-text;
+}
+
+.sidebar-link {
+  @apply flex items-center px-4 py-2.5 text-sm rounded-md hover:bg-gray-700 hover:text-white transition-colors duration-150;
+}
+
+.sidebar-link.active {
+  @apply bg-gradient-to-r from-purple-500 to-cyan-400 text-white font-semibold shadow-md;
+}
+
+.header {
+  @apply bg-white border-b border-gray-200;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-purple;
+}
+
+.btn-primary {
+  @apply text-white bg-brand-purple hover:bg-brand-purple-dark focus:ring-brand-purple active:bg-brand-purple-dark transform active:scale-95 transition-transform;
+}
+
+.btn-secondary {
+  @apply text-brand-purple bg-purple-100 hover:bg-purple-200 focus:ring-brand-purple;
+}
+
+.btn-outline {
+  @apply text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:ring-brand-purple;
+}
+
+/* main.css */
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+.chat-support {
+  @apply fixed bottom-4 right-4 w-12 h-12 md:w-14 md:h-14 bg-brand-purple text-white rounded-full flex items-center justify-center shadow-lg hover:bg-brand-purple-dark transition-colors focus:outline-none focus:ring-2 focus:ring-brand-purple focus:ring-offset-2;
+  animation: pulse 2s ease-in-out 3;
+}
+
+/* Add other custom styles as required */
