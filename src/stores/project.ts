@@ -21,6 +21,12 @@ interface ProjectApiResponse {
   message?: string // For errors
 }
 
+// Matches simple success response (e.g., for delete)
+interface SuccessApiResponse {
+  success: boolean
+  message?: string
+}
+
 export const useProjectStore = defineStore('project', () => {
   // --- State ---
   const projects = ref<ProjectDb[]>([])
@@ -95,6 +101,65 @@ export const useProjectStore = defineStore('project', () => {
     }
   }
 
+  // Update an existing project
+  async function updateProject(
+    projectId: number,
+    projectData: { name?: string; description?: string | null },
+  ): Promise<ProjectDb | null> {
+    loading.value = true
+    error.value = null
+    console.log(`Updating project ${projectId}:`, projectData)
+    try {
+      const response = await axios.put<ProjectApiResponse>(`/projects/${projectId}`, projectData)
+      if (response.data.success && response.data.project) {
+        // Find and update the project in the local list
+        const index = projects.value.findIndex((p) => p.project_id === projectId)
+        if (index !== -1) {
+          projects.value[index] = { ...projects.value[index], ...response.data.project }
+        } else {
+          // If not found locally, maybe add it or just fetch again? For now, log warning.
+          console.warn(`Project ${projectId} updated successfully but not found in local list.`)
+          // Optionally fetch all projects again: await fetchProjects();
+        }
+        return response.data.project
+      } else {
+        throw new Error(response.data.message || 'Failed to update project.')
+      }
+    } catch (err: any) {
+      console.error('Update Project API error:', err)
+      const message = err.response?.data?.message || err.message || 'Error updating project.'
+      error.value = message
+      throw new Error(message) // Re-throw for component
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Delete a project
+  async function deleteProject(projectId: number): Promise<boolean> {
+    loading.value = true
+    error.value = null
+    console.log(`Deleting project ${projectId}`)
+    try {
+      const response = await axios.delete<SuccessApiResponse>(`/projects/${projectId}`)
+      if (response.data.success) {
+        // Remove the project from the local list
+        projects.value = projects.value.filter((p) => p.project_id !== projectId)
+        console.log(`Project ${projectId} deleted.`)
+        return true
+      } else {
+        throw new Error(response.data.message || 'Failed to delete project.')
+      }
+    } catch (err: any) {
+      console.error('Delete Project API error:', err)
+      const message = err.response?.data?.message || err.message || 'Error deleting project.'
+      error.value = message
+      throw new Error(message) // Re-throw for component
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     projects,
     currentProject,
@@ -105,5 +170,7 @@ export const useProjectStore = defineStore('project', () => {
     projectError,
     fetchProjects,
     createProject,
+    updateProject,
+    deleteProject,
   }
 })
