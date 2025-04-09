@@ -1,21 +1,20 @@
 <template>
-    <div class="flex h-screen overflow-hidden bg-gray-50"> <!-- h-[calc(100vh-var(--header-height,4.5rem))] -->
-        <ProjectSidebar v-if="projectId" :project-id="projectId" />
+    <div class="flex h-screen overflow-hidden bg-gray-50">
+        <ProjectSidebar v-if="projectId" :project-id="projectId" class="w-64 fixed top-0 left-0 bottom-0 z-50" />
 
-        <div class="flex-1 p-6 overflow-y-auto">
+        <div class="flex-1 ml-64 p-6 overflow-y-auto">
             <div v-if="projectStore.isLoadingCurrent && !projectStore.activeProject"
                 class="text-center p-10 text-gray-500">Loading project details...</div>
             <div v-else-if="projectStore.projectError && !projectStore.activeProject"
                 class="text-center p-10 text-red-600">Error loading project: {{ projectStore.projectError }}</div>
 
             <router-view v-else></router-view>
-
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'; // Import computed
+import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter, RouterView } from 'vue-router';
 import { useProjectStore } from '@/stores/project';
 import ProjectSidebar from '@/components/ProjectSidebar.vue';
