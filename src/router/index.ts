@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router' // Import RouteRecordRaw
 
-import DefaultLayout from '@/layouts/DefaultLayout.vue'
-import AuthLayout from '@/layouts/AuthLayout.vue'
-import ProjectLayout from '@/layouts/ProjectLayout.vue'
+import DefaultLayout from '../layouts/DefaultLayout.vue'
+import AuthLayout from '../layouts/AuthLayout.vue'
+import ProjectLayout from '../layouts/ProjectLayout.vue'
 
 import HomeView from '../views/HomeView.vue'
 import ProjectsView from '../views/ProjectsView.vue'
@@ -10,7 +10,7 @@ import UploadDataView from '../views/UploadDataView.vue'
 import AnnotateView from '../views/AnnotateView.vue'
 import DatasetView from '../views/DatasetView.vue'
 
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '../stores/auth'
 
 // Define routes using RouteRecordRaw for better typing
 const routes: Array<RouteRecordRaw> = [

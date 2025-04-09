@@ -41,9 +41,9 @@ export const useProjectStore = defineStore('project', () => {
     error.value = null
     console.log('Fetching projects...')
     try {
-      const response = await axios.get<ProjectListApiResponse>('/projects')
-      if (response.data.success && response.data.projects) {
-        projects.value = response.data.projects
+      const response = await axios.get('/projects')
+      if (response.data.status === 'success') {
+        projects.value = response.data.data
         console.log('Projects fetched:', projects.value.length)
       } else {
         throw new Error(
@@ -52,11 +52,10 @@ export const useProjectStore = defineStore('project', () => {
       }
     } catch (err: any) {
       console.error('Fetch Projects API error:', err)
-      const message =
+      error.value =
         err.response?.data?.message ||
         err.message ||
         'An unknown error occurred while fetching projects.'
-      error.value = message
       projects.value = []
     } finally {
       loading.value = false
@@ -70,17 +69,16 @@ export const useProjectStore = defineStore('project', () => {
     currentProject.value = null // Clear previous project
     console.log(`Fetching project ${projectId}...`)
     try {
-      const response = await axios.get<ProjectApiResponse>(`/projects/${projectId}`)
-      if (response.data.success && response.data.project) {
-        currentProject.value = response.data.project
+      const response = await axios.get(`/projects/${projectId}`)
+      if (response.data.status === 'success') {
+        currentProject.value = response.data.data
         console.log('Current project set:', currentProject.value?.name)
       } else {
         throw new Error(response.data.message || `Failed to fetch project ${projectId}.`)
       }
     } catch (err: any) {
-      const message =
+      error.value =
         err.response?.data?.message || err.message || `Error fetching project ${projectId}.`
-      error.value = message
       console.error('Fetch Project By ID API error:', err)
     } finally {
       loadingCurrent.value = false
@@ -98,11 +96,11 @@ export const useProjectStore = defineStore('project', () => {
     console.log('Creating project:', projectData.name)
     try {
       // Use ProjectApiResponse which references ProjectDb
-      const response = await axios.post<ProjectApiResponse>('/projects', projectData)
-      if (response.data.success && response.data.project) {
+      const response = await axios.post('/projects', projectData)
+      if (response.data.status === 'success') {
         console.log('Project created:', response.data.project.project_id)
-        projects.value.unshift(response.data.project)
-        return response.data.project
+        projects.value.unshift(response.data.data)
+        return response.data.data
       } else {
         throw new Error(
           response.data.message || 'Failed to create project: Invalid server response.',
@@ -130,15 +128,15 @@ export const useProjectStore = defineStore('project', () => {
     error.value = null
     console.log(`Updating project ${projectId}:`, projectData)
     try {
-      const response = await axios.put<ProjectApiResponse>(`/projects/${projectId}`, projectData)
-      if (response.data.success && response.data.project) {
+      const response = await axios.put(`/projects/${projectId}`, projectData)
+      if (response.data.status === 'success') {
         const index = projects.value.findIndex((p) => p.project_id === projectId)
         if (index !== -1) {
-          projects.value[index] = { ...projects.value[index], ...response.data.project }
+          projects.value[index] = { ...projects.value[index], ...response.data.data }
         }
         // Also update currentProject if it's the one being edited
         if (currentProject.value?.project_id === projectId) {
-          currentProject.value = { ...currentProject.value, ...response.data.project }
+          currentProject.value = { ...currentProject.value, ...response.data.data }
         }
         return response.data.project
       } else {
@@ -160,8 +158,8 @@ export const useProjectStore = defineStore('project', () => {
     error.value = null
     console.log(`Deleting project ${projectId}`)
     try {
-      const response = await axios.delete<SuccessApiResponse>(`/projects/${projectId}`)
-      if (response.data.success) {
+      const response = await axios.delete(`/projects/${projectId}`)
+      if (response.data.status === 'success') {
         // Remove the project from the local list
         projects.value = projects.value.filter((p) => p.project_id !== projectId)
         console.log(`Project ${projectId} deleted.`)

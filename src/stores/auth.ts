@@ -9,23 +9,7 @@ interface User {
   email: string
 }
 
-// Matches the success response structure from the backend
-interface AuthApiResponse {
-  success: boolean
-  message?: string
-  token?: string
-  user?: Use
-}
-
-// Matches the error response structure from the backend
-interface ApiErrorResponse {
-  success: false
-  status: number
-  message: string
-  stack?: string
-}
-
-const API_BASE_URL = 'http://localhost:5000/api/v1' // Ensure this matches your backend port
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api' // Ensure this matches your backend port
 axios.defaults.baseURL = API_BASE_URL
 
 // Function to set the default Authorization header for Axios
@@ -99,9 +83,13 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     error.value = null
     try {
-      const response = await axios.post<AuthApiResponse>('/auth/login', { identifier, password })
-      if (response.data.success && response.data.token && response.data.user) {
-        setAuthData(response.data.token, response.data.user) // This now also sets the header
+      const response = await axios.post('/users/login', { email: identifier, password })
+      if (
+        response.data.status === 'success' &&
+        response.data.data.token &&
+        response.data.data.user
+      ) {
+        setAuthData(response.data.data.token, response.data.data.user) // This now also sets the header
       } else {
         throw new Error(response.data.message || 'Login failed: Invalid response from server.')
       }
@@ -120,12 +108,13 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     error.value = null
     try {
-      const response = await axios.post<AuthApiResponse>('/auth/register', {
+      const response = await axios.post('/users/register', {
         username,
         email,
         password,
+        password_confirm: password,
       })
-      if (response.data.success && response.data.token && response.data.user) {
+      if (response.data.status === 'success') {
         console.log('Registration successful')
       } else {
         throw new Error(
@@ -150,10 +139,34 @@ export const useAuthStore = defineStore('auth', () => {
     // Actual redirection should happen where logout is called or via interceptor
   }
 
+  async function fetchUserProfile() {
+    if (!token.value) return
+
+    loading.value = true
+    try {
+      const response = await axios.get('/users/profile')
+      if (response.data.status === 'success') {
+        user.value = response.data.data
+      } else {
+        throw new Error('Invalid profile response')
+      }
+    } catch (err) {
+      console.error('Failed to fetch profile:', err)
+      // Token không hợp lệ hoặc hết hạn, logout
+      logout()
+    } finally {
+      loading.value = false
+    }
+  }
+
   // checkAuth is now primarily for setting the initial header
   function checkAuth() {
     console.log('Checking auth status from localStorage...')
-    setAxiosAuthHeader(token.value)
+
+    if (token.value) {
+      setAxiosAuthHeader(token.value)
+      fetchUserProfile()
+    }
   }
 
   return {
@@ -174,6 +187,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     register,
     logout,
+    fetchUserProfile,
     checkAuth,
     setAuthData,
   }
