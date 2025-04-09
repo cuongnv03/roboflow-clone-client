@@ -1,5 +1,5 @@
 <template>
-    <header v-if="route.name !== 'login'" class="header">
+    <header v-if="route.name !== 'login'" class="header fixed top-0 z-10 w-full bg-white shadow">
         <nav class="mx-auto flex max-w-7xl items-center justify-between py-6" aria-label="Global">
             <div class="flex lg:flex-1">
                 <router-link :to="{ name: 'home' }" class="-m-1.5 p-1.5">
@@ -27,7 +27,7 @@
         </nav>
     </header>
 
-    <main>
+    <main class="mt-[5.3rem]">
         <RouterView />
     </main>
 
