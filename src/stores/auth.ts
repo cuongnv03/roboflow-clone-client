@@ -9,7 +9,7 @@ interface User {
   email: string
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1' // Ensure this matches your backend port
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api/v1' // Ensure this matches your backend port
 axios.defaults.baseURL = API_BASE_URL
 
 // Function to set the default Authorization header for Axios

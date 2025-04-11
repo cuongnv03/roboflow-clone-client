@@ -10,10 +10,20 @@ import UploadDataView from '../views/UploadDataView.vue'
 import AnnotateView from '../views/AnnotateView.vue'
 import DatasetView from '../views/DatasetView.vue'
 
+
 import { useAuthStore } from '../stores/auth'
 
 // Define routes using RouteRecordRaw for better typing
 const routes: Array<RouteRecordRaw> = [
+  {
+    path: '/',
+    redirect: '/upload',
+  },
+  {
+    path: '/upload',
+    name: 'upload',
+    component: UploadDataView,
+  },
   {
     path: '/',
     component: DefaultLayout,
