@@ -1,4 +1,3 @@
-<!-- src/components/ui/Card.vue -->
 <template>
   <div :class="['rounded-lg border bg-card text-card-foreground shadow-sm', props.class]" v-bind="$attrs">
     <slot />
