@@ -113,7 +113,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useImageStore } from '@/stores/useImageStore'
+import { images } from '@/stores/images'
 import { Check, Plus, Trash2, X } from 'lucide-vue-next'
 
 import  Dialog  from '@/components/ui/Dialog.vue'
@@ -121,7 +121,7 @@ import  Button  from '@/components/ui/Button.vue'
 import  Input  from '@/components/ui/Input.vue'
 import  Badge  from '@/components/ui/Badge.vue'
 
-const imageStore = useImageStore()
+const imageStore = images()
 const newTag = ref('')
 const selectedImage = computed(() => imageStore.selectedImage)
 

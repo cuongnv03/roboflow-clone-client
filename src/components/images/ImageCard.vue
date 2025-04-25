@@ -82,7 +82,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useImageStore } from '@/stores/useImageStore'
+import { images } from '@/stores/images'
 import { Check, Trash2 } from 'lucide-vue-next'
 
 import Button from '@/components/ui/Button.vue'
@@ -104,7 +104,7 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const store = useImageStore()
+const store = images()
 
 const isSelected = computed(() => store.selectedImage?.id === props.image.id)
 const isChecked = computed(() => store.selectedImageIds.includes(props.image.id))

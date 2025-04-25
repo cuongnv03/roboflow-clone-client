@@ -91,7 +91,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useImageStore } from '@/stores/useImageStore'
+import { images } from '@/stores/images'
 
 import { UploadCloud, Plus, X } from 'lucide-vue-next'
 
@@ -101,7 +101,7 @@ import Input from '@/components/ui/Input.vue'
 import Badge from '@/components/ui/Badge.vue'
 import Label from '@/components/ui/Label.vue'
 
-const imageStore = useImageStore()
+const imageStore = images()
 const isDragging = ref(false)
 const selectedTags = ref<string[]>([])
 const newTag = ref('')
