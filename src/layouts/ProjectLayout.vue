@@ -17,7 +17,7 @@
 import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter, RouterView } from 'vue-router';
 import { useProjectStore } from '@/stores/project';
-import ProjectSidebar from '@/components/ProjectSidebar.vue';
+import ProjectSidebar from '@/components/projects/ProjectSidebar.vue';
 
 const route = useRoute();
 const router = useRouter();

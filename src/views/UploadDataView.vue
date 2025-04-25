@@ -50,9 +50,9 @@
 
 <script setup lang="ts">
 import { ArrowRight } from 'lucide-vue-next'
-import ImageUploader from '@/components/ImageUploader.vue'
-import ImageGallery from '@/components/ImageGallery.vue'
-import ImagePreview from '@/components/ImagePreview.vue'
+import ImageUploader from '@/components/images/ImageUploader.vue'
+import ImageGallery from '@/components/images/ImageGallery.vue'
+import ImagePreview from '@/components/images/ImagePreview.vue'
 
 // UI components
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui'
