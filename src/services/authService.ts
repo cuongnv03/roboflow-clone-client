@@ -1,13 +1,14 @@
 import axios from 'axios'
-import type { User, AuthResponse, LoginCredentials, RegisterData } from '@/types/user'
+import type { AuthResponse, User } from '@/types/auth'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'
+// Default API URL from environment variable
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'
 
-// Initialize Axios with base URL
-axios.defaults.baseURL = API_BASE_URL
+// Set base URL for axios
+axios.defaults.baseURL = API_URL
 
-// Function to set the Authorization header
-const initializeAuthHeader = (token: string | null) => {
+// Set auth header for requests
+const setAuthHeader = (token: string | null): void => {
   if (token) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
   } else {
@@ -16,44 +17,59 @@ const initializeAuthHeader = (token: string | null) => {
 }
 
 // Login user
-const login = async (
-  identifier: string,
-  password: string,
-): Promise<{ token: string; user: User }> => {
+const login = async (email: string, password: string): Promise<AuthResponse> => {
   try {
-    const response = await axios.post<AuthResponse>('/auth/login', { email: identifier, password })
+    const response = await axios.post<{ status: string; message?: string; data?: AuthResponse }>(
+      '/auth/login',
+      {
+        email,
+        password,
+      },
+    )
 
     if (response.data.status === 'success' && response.data.data) {
-      return {
-        token: response.data.data.token,
-        user: response.data.data.user,
-      }
+      return response.data.data
     }
 
     throw new Error(response.data.message || 'Login failed')
   } catch (error: any) {
-    if (error.response) {
-      throw new Error(error.response.data.message || 'Authentication failed')
+    if (error.response?.data) {
+      const { message, errors } = error.response.data
+      const err = new Error(message || 'Login failed')
+      ;(err as any).errors = errors
+      throw err
     }
     throw error
   }
 }
 
 // Register user
-const register = async (username: string, email: string, password: string): Promise<void> => {
+const register = async (
+  username: string,
+  email: string,
+  password: string,
+): Promise<AuthResponse> => {
   try {
-    const response = await axios.post<AuthResponse>('/auth/register', {
-      username,
-      email,
-      password,
-    })
+    const response = await axios.post<{ status: string; message?: string; data?: AuthResponse }>(
+      '/auth/register',
+      {
+        username,
+        email,
+        password,
+      },
+    )
 
-    if (response.data.status !== 'success') {
-      throw new Error(response.data.message || 'Registration failed')
+    if (response.data.status === 'success' && response.data.data) {
+      return response.data.data
     }
+
+    throw new Error(response.data.message || 'Registration failed')
   } catch (error: any) {
-    if (error.response) {
-      throw new Error(error.response.data.message || 'Registration failed')
+    if (error.response?.data) {
+      const { message, errors } = error.response.data
+      const err = new Error(message || 'Registration failed')
+      ;(err as any).errors = errors
+      throw err
     }
     throw error
   }
@@ -62,7 +78,7 @@ const register = async (username: string, email: string, password: string): Prom
 // Fetch user profile
 const fetchUserProfile = async (): Promise<User | null> => {
   try {
-    const response = await axios.get<{ status: string; data?: User; message?: string }>(
+    const response = await axios.get<{ status: string; message?: string; data?: User }>(
       '/users/profile',
     )
 
@@ -77,15 +93,13 @@ const fetchUserProfile = async (): Promise<User | null> => {
   }
 }
 
-// Logout
-const logout = () => {
-  // Clear token from headers
+// Logout - no server call needed with JWT
+const logout = (): void => {
   delete axios.defaults.headers.common['Authorization']
-  // No server call needed as we're using JWT
 }
 
 export default {
-  initializeAuthHeader,
+  setAuthHeader,
   login,
   register,
   fetchUserProfile,

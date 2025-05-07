@@ -1,16 +1,18 @@
 <template>
     <form @submit.prevent="handleSubmit" class="space-y-4">
         <div>
-            <label for="projectName" class="block text-sm font-medium text-gray-700 mb-1">Project Name <span
-                    class="text-red-500">*</span></label>
+            <label for="projectName" class="block text-sm font-medium text-gray-700 mb-1">
+                Project Name <span class="text-red-500">*</span>
+            </label>
             <input id="projectName" v-model="formData.name" required type="text"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent"
                 placeholder="Enter project name" />
         </div>
 
         <div>
-            <label for="projectType" class="block text-sm font-medium text-gray-700 mb-1">Project Type <span
-                    class="text-red-500">*</span></label>
+            <label for="projectType" class="block text-sm font-medium text-gray-700 mb-1">
+                Project Type <span class="text-red-500">*</span>
+            </label>
             <select id="projectType" v-model="formData.type" required
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent">
                 <option value="" disabled>Select project type</option>
@@ -22,7 +24,9 @@
         </div>
 
         <div>
-            <label for="projectDesc" class="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+            <label for="projectDesc" class="block text-sm font-medium text-gray-700 mb-1">
+                Description (Optional)
+            </label>
             <textarea id="projectDesc" v-model="formData.description" rows="3"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent"
                 placeholder="Enter project description"></textarea>
@@ -51,9 +55,8 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits, ref, onMounted } from 'vue';
-import { type ProjectType, allowedProjectTypes } from '@/types/projectTypes';
-import type { ProjectDb } from '@/types/express/index';
+import { ref, reactive, onMounted } from 'vue';
+import { PROJECT_TYPES, type ProjectType, type Project } from '@/types/project';
 
 interface FormData {
     name: string;
@@ -61,16 +64,25 @@ interface FormData {
     type: ProjectType | '';
 }
 
-const props = defineProps<{
-    project?: ProjectDb;
-    isLoading?: boolean;
-    isEdit?: boolean;
-}>();
+const props = defineProps({
+    project: {
+        type: Object as () => Project | undefined,
+        default: undefined
+    },
+    isLoading: {
+        type: Boolean,
+        default: false
+    },
+    isEdit: {
+        type: Boolean,
+        default: false
+    }
+});
 
 const emit = defineEmits(['submit', 'cancel']);
 
-const projectTypes = ref(allowedProjectTypes);
-const formData = ref<FormData>({
+const projectTypes = ref(PROJECT_TYPES);
+const formData = reactive<FormData>({
     name: '',
     description: '',
     type: ''
@@ -79,11 +91,9 @@ const formData = ref<FormData>({
 // Initialize form data if editing
 onMounted(() => {
     if (props.project) {
-        formData.value = {
-            name: props.project.name,
-            description: props.project.description || '',
-            type: props.project.type as ProjectType
-        };
+        formData.name = props.project.name;
+        formData.description = props.project.description || '';
+        formData.type = props.project.type;
     }
 });
 
@@ -92,11 +102,11 @@ const formatProjectType = (type: string) => {
 };
 
 const handleSubmit = () => {
-    if (formData.value.name && formData.value.type) {
+    if (formData.name && formData.type) {
         emit('submit', {
-            ...formData.value,
+            ...formData,
             // Ensure type is ProjectType
-            type: formData.value.type as ProjectType
+            type: formData.type as ProjectType
         });
     }
 };

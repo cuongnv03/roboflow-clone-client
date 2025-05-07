@@ -3,11 +3,14 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue';
 import { RouterView } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 
 const authStore = useAuthStore();
 
-// Initialize auth state on load
-authStore.checkAuth();
+// Check authentication status on app load
+onMounted(() => {
+  authStore.checkAuth();
+});
 </script>

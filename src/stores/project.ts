@@ -1,24 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import projectService from '@/services/projectService'
-import type { ProjectDb } from '@/types/express/index'
-import type { ProjectType } from '@/types/projectTypes'
-
-export interface ProjectCreateData {
-  name: string
-  description?: string | null
-  type: ProjectType
-}
-
-export interface ProjectUpdateData {
-  name?: string
-  description?: string | null
-}
+import type { Project, ProjectCreateData, ProjectUpdateData, ProjectStats } from '@/types/project'
 
 export const useProjectStore = defineStore('project', () => {
   // State
-  const projects = ref<ProjectDb[]>([])
-  const activeProject = ref<ProjectDb | null>(null)
+  const projects = ref<Project[]>([])
+  const activeProject = ref<Project | null>(null)
+  const projectStats = ref<ProjectStats | null>(null)
   const loading = ref(false)
   const loadingCurrent = ref(false)
   const error = ref<string | null>(null)
@@ -60,7 +49,22 @@ export const useProjectStore = defineStore('project', () => {
     }
   }
 
-  async function createProject(data: ProjectCreateData): Promise<ProjectDb> {
+  async function fetchProjectStats(projectId: number): Promise<void> {
+    loading.value = true
+    error.value = null
+
+    try {
+      const stats = await projectService.getProjectStats(projectId)
+      projectStats.value = stats
+    } catch (err: any) {
+      error.value = err.message || `Failed to fetch project stats`
+      console.error('Error fetching project stats:', err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function createProject(data: ProjectCreateData): Promise<Project> {
     loading.value = true
     error.value = null
 
@@ -77,7 +81,7 @@ export const useProjectStore = defineStore('project', () => {
     }
   }
 
-  async function updateProject(projectId: number, data: ProjectUpdateData): Promise<ProjectDb> {
+  async function updateProject(projectId: number, data: ProjectUpdateData): Promise<Project> {
     loading.value = true
     error.value = null
 
@@ -85,13 +89,13 @@ export const useProjectStore = defineStore('project', () => {
       const updatedProject = await projectService.updateProject(projectId, data)
 
       // Update project in the list
-      const index = projects.value.findIndex((p) => p.project_id === projectId)
+      const index = projects.value.findIndex((p) => p.id === projectId)
       if (index !== -1) {
         projects.value[index] = updatedProject
       }
 
       // Update active project if it's the one being updated
-      if (activeProject.value?.project_id === projectId) {
+      if (activeProject.value?.id === projectId) {
         activeProject.value = updatedProject
       }
 
@@ -111,10 +115,10 @@ export const useProjectStore = defineStore('project', () => {
 
     try {
       await projectService.deleteProject(projectId)
-      projects.value = projects.value.filter((p) => p.project_id !== projectId)
+      projects.value = projects.value.filter((p) => p.id !== projectId)
 
       // Clear active project if it's the one being deleted
-      if (activeProject.value?.project_id === projectId) {
+      if (activeProject.value?.id === projectId) {
         activeProject.value = null
       }
     } catch (err: any) {
@@ -126,10 +130,21 @@ export const useProjectStore = defineStore('project', () => {
     }
   }
 
+  // Reset state
+  function resetState(): void {
+    projects.value = []
+    activeProject.value = null
+    projectStats.value = null
+    loading.value = false
+    loadingCurrent.value = false
+    error.value = null
+  }
+
   return {
     // State
     projects,
     activeProject,
+    projectStats,
     loading,
     loadingCurrent,
     error,
@@ -143,8 +158,10 @@ export const useProjectStore = defineStore('project', () => {
     // Actions
     fetchProjects,
     fetchProjectById,
+    fetchProjectStats,
     createProject,
     updateProject,
     deleteProject,
+    resetState,
   }
 })

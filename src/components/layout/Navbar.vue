@@ -16,22 +16,21 @@
                         </router-link>
                     </div>
 
-                    <!-- Navigation Links (Desktop) -->
+                    <!-- Main navigation links (desktop) -->
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
                         <router-link to="/projects"
                             class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-full"
                             :class="isActive('projects') ? 'border-brand-purple text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'">
                             Projects
                         </router-link>
-
+                        <router-link to="/datasets"
+                            class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-full"
+                            :class="isActive('datasets') ? 'border-brand-purple text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'">
+                            Datasets
+                        </router-link>
                         <a href="#"
                             class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 h-full">
                             Documentation
-                        </a>
-
-                        <a href="#"
-                            class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 h-full">
-                            Help Center
                         </a>
                     </div>
                 </div>
@@ -54,7 +53,7 @@
                     <div class="sm:hidden ml-4">
                         <button @click="mobileMenuOpen = !mobileMenuOpen" type="button"
                             class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-purple"
-                            aria-controls="mobile-menu" :aria-expanded="mobileMenuOpen">
+                            :aria-expanded="mobileMenuOpen">
                             <span class="sr-only">Open main menu</span>
                             <svg v-if="!mobileMenuOpen" class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg"
                                 fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -73,22 +72,21 @@
         </div>
 
         <!-- Mobile menu -->
-        <div v-if="mobileMenuOpen" id="mobile-menu" class="sm:hidden">
+        <div v-if="mobileMenuOpen" class="sm:hidden">
             <div class="pt-2 pb-3 space-y-1">
                 <router-link to="/projects" class="block pl-3 pr-4 py-2 text-base font-medium border-l-4"
                     :class="isActive('projects') ? 'bg-brand-purple bg-opacity-10 border-brand-purple text-brand-purple' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'"
                     @click="mobileMenuOpen = false">
                     Projects
                 </router-link>
-
+                <router-link to="/datasets" class="block pl-3 pr-4 py-2 text-base font-medium border-l-4"
+                    :class="isActive('datasets') ? 'bg-brand-purple bg-opacity-10 border-brand-purple text-brand-purple' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'"
+                    @click="mobileMenuOpen = false">
+                    Datasets
+                </router-link>
                 <a href="#"
                     class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800">
                     Documentation
-                </a>
-
-                <a href="#"
-                    class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800">
-                    Help Center
                 </a>
             </div>
         </div>
@@ -96,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 
@@ -105,14 +103,14 @@ const route = useRoute();
 const authStore = useAuthStore();
 const mobileMenuOpen = ref(false);
 
-// Check if route is active
+// Helper function to check if a route is active
 const isActive = (routeName: string) => {
     return route.name === routeName || route.path.includes(`/${routeName}`);
 };
 
-// Logout handler
+// Handle logout
 const logout = async () => {
-    await authStore.logout();
+    authStore.logout();
     router.push('/login');
     mobileMenuOpen.value = false;
 };

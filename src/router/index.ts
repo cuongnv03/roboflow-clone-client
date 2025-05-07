@@ -2,35 +2,36 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 // Layouts
-import DefaultLayout from '@/layouts/DefaultLayout.vue'
-import AuthLayout from '@/layouts/AuthLayout.vue'
 import ProjectLayout from '@/layouts/ProjectLayout.vue'
+import DefaultLayout from '@/layouts/DefaultLayout.vue'
 
-// Views
-import HomeView from '@/views/HomeView.vue'
-import ProjectsView from '@/views/ProjectsView.vue'
-import UploadDataView from '@/views/UploadDataView.vue'
-import AnnotateView from '@/views/AnnotateView.vue'
-import DatasetView from '@/views/DatasetView.vue'
+// Pages
+import LoginPage from '@/pages/LoginPage.vue'
+import ProjectsPage from '@/pages/ProjectsPage.vue'
+import UploadDataPage from '@/pages/UploadDataPage.vue'
+import AnnotatePage from '@/pages/AnnotatePage.vue'
+import DatasetsPage from '@/pages/DatasetsPage.vue'
+import NotFoundPage from '@/pages/NotFoundPage.vue'
+import HomePage from '@/pages/HomePage.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    component: DefaultLayout,
-    children: [
-      {
-        path: '',
-        name: 'home',
-        component: HomeView,
-        meta: { requiresAuth: true },
-      },
-      {
-        path: '/projects',
-        name: 'projects',
-        component: ProjectsView,
-        meta: { requiresAuth: true },
-      },
-    ],
+    name: 'home',
+    component: HomePage,
+    meta: { requiresAuth: false },
+  },
+  {
+    path: '/login',
+    name: 'login',
+    component: LoginPage,
+    meta: { requiresGuest: true },
+  },
+  {
+    path: '/projects',
+    name: 'projects',
+    component: ProjectsPage,
+    meta: { requiresAuth: true },
   },
   {
     path: '/projects/:projectId',
@@ -38,62 +39,62 @@ const routes: Array<RouteRecordRaw> = [
     meta: { requiresAuth: true },
     children: [
       {
-        path: '',
-        redirect: (to) => {
-          return { name: 'project-upload', params: { projectId: to.params.projectId } }
-        },
-      },
-      {
         path: 'upload',
         name: 'project-upload',
-        component: UploadDataView,
+        component: UploadDataPage,
         meta: { requiresAuth: true },
       },
       {
         path: 'annotate',
         name: 'project-annotate',
-        component: AnnotateView,
+        component: AnnotatePage,
         meta: { requiresAuth: true },
       },
       {
-        path: 'dataset',
+        path: 'datasets',
         name: 'project-dataset',
-        component: DatasetView,
+        component: DatasetsPage,
         meta: { requiresAuth: true },
+      },
+      {
+        path: '',
+        redirect: (to) => {
+          return { name: 'project-upload', params: { projectId: to.params.projectId } }
+        },
       },
     ],
   },
   {
-    path: '/login',
-    name: 'login',
-    component: AuthLayout,
-    meta: { requiresGuest: true },
-  },
-  {
     path: '/:pathMatch(.*)*',
-    redirect: '/',
+    name: 'not-found',
+    component: NotFoundPage,
   },
 ]
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes,
 })
 
-// Navigation Guards
+// Navigation guards
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
   const requiresGuest = to.matched.some((record) => record.meta.requiresGuest)
 
+  // Check if the route requires authentication
   if (requiresAuth && !authStore.isAuthenticated) {
     next({
-      name: 'login',
+      path: '/login',
       query: { redirect: to.fullPath },
     })
-  } else if (requiresGuest && authStore.isAuthenticated) {
-    next({ name: 'home' })
-  } else {
+  }
+  // Check if the route requires a guest (non-authenticated user)
+  else if (requiresGuest && authStore.isAuthenticated) {
+    next({ path: '/projects' })
+  }
+  // Proceed with navigation
+  else {
     next()
   }
 })

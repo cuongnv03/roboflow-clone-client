@@ -16,9 +16,7 @@
                     <h1 v-if="projectStore.activeProject" class="text-xl font-bold text-white truncate">
                         {{ projectStore.activeProject.name }}
                     </h1>
-                    <div v-else-if="projectStore.isLoadingCurrent" class="animate-pulse h-6 bg-gray-700 rounded w-3/4">
-                    </div>
-                    <div v-else class="text-red-400 text-sm">Error loading project</div>
+                    <div v-else class="animate-pulse h-6 bg-gray-700 rounded w-3/4"></div>
 
                     <p v-if="projectStore.activeProject" class="text-brand-text text-sm capitalize mt-1">
                         {{ formatProjectType(projectStore.activeProject.type) }} Project
@@ -63,7 +61,7 @@
         <!-- Main Content -->
         <div class="ml-64 flex-1 flex flex-col min-h-screen">
             <main class="flex-1 p-6 bg-gray-50">
-                <RouterView />
+                <router-view />
             </main>
         </div>
     </div>
@@ -79,7 +77,7 @@ const router = useRouter();
 const projectStore = useProjectStore();
 
 // Get project ID from route params
-const projectId = computed(() => route.params.projectId as string);
+const projectId = computed(() => route.params.projectId);
 
 // Format project type for display
 const formatProjectType = (type: string | undefined) => {

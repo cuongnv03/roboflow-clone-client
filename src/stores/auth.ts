@@ -1,23 +1,23 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import authService from '@/services/authService'
-import type { User } from '@/types/user'
+import type { User, AuthError } from '@/types/auth'
 
 export const useAuthStore = defineStore('auth', () => {
   // State
-  const token = ref<string | null>(localStorage.getItem('authToken') || null)
+  const token = ref<string | null>(localStorage.getItem('token') || null)
   const user = ref<User | null>(null)
   const loading = ref(false)
-  const error = ref<string | null>(null)
+  const error = ref<AuthError | null>(null)
 
   // Initialize user from localStorage if available
-  const storedUser = localStorage.getItem('authUser')
+  const storedUser = localStorage.getItem('user')
   if (storedUser) {
     try {
       user.value = JSON.parse(storedUser)
     } catch (e) {
       console.error('Failed to parse stored user:', e)
-      localStorage.removeItem('authUser')
+      localStorage.removeItem('user')
     }
   }
 
@@ -28,90 +28,97 @@ export const useAuthStore = defineStore('auth', () => {
   const authError = computed(() => error.value)
 
   // Actions
-  function setAuthData(newToken: string | null, newUser: User | null) {
+  const setAuthData = (newToken: string | null, newUser: User | null) => {
     token.value = newToken
     user.value = newUser
     error.value = null
 
     if (newToken) {
-      localStorage.setItem('authToken', newToken)
+      localStorage.setItem('token', newToken)
     } else {
-      localStorage.removeItem('authToken')
+      localStorage.removeItem('token')
     }
 
     if (newUser) {
-      localStorage.setItem('authUser', JSON.stringify(newUser))
+      localStorage.setItem('user', JSON.stringify(newUser))
     } else {
-      localStorage.removeItem('authUser')
+      localStorage.removeItem('user')
     }
 
-    // Update Axios auth header
-    authService.initializeAuthHeader(newToken)
+    // Update authorization header
+    authService.setAuthHeader(newToken)
   }
 
-  async function login(identifier: string, password: string): Promise<void> {
+  const login = async (email: string, password: string): Promise<void> => {
     loading.value = true
     error.value = null
 
     try {
-      const authData = await authService.login(identifier, password)
-      setAuthData(authData.token, authData.user)
+      const response = await authService.login(email, password)
+      setAuthData(response.token, response.user)
     } catch (err: any) {
-      const message = err.message || 'An unknown error occurred during login.'
-      error.value = message
+      const message = err.message || 'Failed to login'
+      error.value = { message, errors: err.errors }
       setAuthData(null, null)
-      throw new Error(message)
+      throw err
     } finally {
       loading.value = false
     }
   }
 
-  async function register(username: string, email: string, password: string): Promise<void> {
+  const register = async (username: string, email: string, password: string): Promise<void> => {
     loading.value = true
     error.value = null
 
     try {
-      await authService.register(username, email, password)
-      // Optionally, automatically login the user after registration
-      await login(email, password)
+      const response = await authService.register(username, email, password)
+      // Some APIs automatically log in the user after registration
+      // Otherwise, just set a success message
+      if (response.token && response.user) {
+        setAuthData(response.token, response.user)
+      }
     } catch (err: any) {
-      const message = err.message || 'An unknown error occurred during registration.'
-      error.value = message
-      throw new Error(message)
+      const message = err.message || 'Failed to register'
+      error.value = { message, errors: err.errors }
+      throw err
     } finally {
       loading.value = false
     }
   }
 
-  async function logout() {
+  const logout = (): void => {
     authService.logout()
     setAuthData(null, null)
-    // NOTE: Router redirect should happen where logout is called
   }
 
-  async function fetchUserProfile() {
+  const checkAuth = (): void => {
+    if (token.value) {
+      authService.setAuthHeader(token.value)
+
+      // Optionally verify the token with the server
+      if (!user.value) {
+        fetchUserProfile()
+      }
+    }
+  }
+
+  const fetchUserProfile = async (): Promise<void> => {
     if (!token.value) return
 
     loading.value = true
     try {
-      const profile = await authService.fetchUserProfile()
-      if (profile) {
-        user.value = profile
+      const userData = await authService.fetchUserProfile()
+      if (userData) {
+        user.value = userData
       } else {
-        logout() // Token may be invalid
+        // Token may be invalid
+        logout()
       }
     } catch (err) {
-      console.error('Failed to fetch profile:', err)
-      logout() // Token may be invalid
+      console.error('Failed to fetch user profile:', err)
+      logout()
     } finally {
       loading.value = false
-    }
-  }
-
-  function checkAuth() {
-    authService.initializeAuthHeader(token.value)
-    if (token.value && !user.value) {
-      fetchUserProfile()
     }
   }
 
@@ -132,8 +139,8 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     register,
     logout,
-    fetchUserProfile,
     checkAuth,
+    fetchUserProfile,
     setAuthData,
   }
 })

@@ -9,31 +9,32 @@ export interface ImageUploadOptions {
   tags?: string[]
 }
 
-export interface ImageFile {
-  id: string
-  url: string
-  name: string
-  size: number
-  type: string
-  uploadedAt: Date
-  tags: string[]
-  isAnnotated: boolean
-  batchName: string
-  isUploading?: boolean
-  uploadProgress?: number
-  uploadError?: string
-}
-
-export interface ServerImageResponse {
+export interface Image {
   id: number
   projectId: number
-  url: string
   filePath: string
   originalFilename: string
   width: number
   height: number
   uploadDate: string
   status: 'uploaded' | 'annotated' | 'processed'
+  tags: string[]
   batchName?: string
-  tags?: string[]
+}
+
+export interface TempImage {
+  id: string // Client-side ID, will use UUID
+  file: File
+  previewUrl: string
+  name: string
+  size: number
+  type: string
+  isUploading?: boolean
+}
+
+export interface UploadResponse {
+  uploadedImages: Image[]
+  failedUploads: Array<{ filename: string; error: string }>
+  totalUploaded: number
+  totalFailed: number
 }

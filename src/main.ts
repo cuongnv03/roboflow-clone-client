@@ -3,49 +3,36 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import axios from 'axios'
-import { useAuthStore } from './stores/auth'
-
 import './assets/main.css'
 
-// Create app instance
+// Create app
 const app = createApp(App)
 
-// Initialize Pinia
+// Setup Pinia
 const pinia = createPinia()
 app.use(pinia)
 
-// Set up Axios interceptors
+// Setup Router
+app.use(router)
+
+// Setup Axios interceptors for handling authentication errors
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Handle 401 Unauthorized errors
     if (error.response && error.response.status === 401) {
-      const authStore = useAuthStore()
+      // Handle unauthorized errors (e.g., token expired)
+      console.log('Unauthorized access, redirecting to login')
 
-      // Only logout if user was previously authenticated
-      if (authStore.isAuthenticated) {
-        console.log('Token expired or invalid. Logging out.')
-        authStore.logout()
-        router.push({
-          name: 'login',
-          query: {
-            expired: 'true',
-            redirect: router.currentRoute.value.fullPath,
-          },
-        })
-      }
+      // Clear authentication
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+
+      // Redirect to login
+      router.push('/login')
     }
-
     return Promise.reject(error)
   },
 )
-
-// Initialize auth state (must come after pinia setup)
-const authStore = useAuthStore()
-authStore.checkAuth()
-
-// Initialize router
-app.use(router)
 
 // Mount app
 app.mount('#app')

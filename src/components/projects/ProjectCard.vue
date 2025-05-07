@@ -14,13 +14,13 @@
                     Edit
                 </button>
                 <span class="text-gray-300">|</span>
-                <button @click="$emit('delete', project.project_id)"
+                <button @click="$emit('delete', project.id)"
                     class="text-red-600 hover:text-red-800 text-sm font-medium">
                     Delete
                 </button>
             </div>
 
-            <router-link :to="{ name: 'project-upload', params: { projectId: project.project_id } }"
+            <router-link :to="{ name: 'project-upload', params: { projectId: project.id } }"
                 class="btn btn-outline text-sm py-1 px-3">
                 Open
             </router-link>
@@ -30,10 +30,10 @@
 
 <script setup lang="ts">
 import { defineProps, defineEmits } from 'vue';
-import type { ProjectDb } from '@/types/express/index';
+import type { Project } from '@/types/project';
 
 const props = defineProps<{
-    project: ProjectDb
+    project: Project
 }>();
 
 const emit = defineEmits(['edit', 'delete']);

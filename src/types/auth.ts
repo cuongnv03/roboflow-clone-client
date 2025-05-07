@@ -1,5 +1,5 @@
 export interface User {
-  userId: number
+  id: number
   username: string
   email: string
   isActive?: boolean
@@ -7,12 +7,8 @@ export interface User {
 }
 
 export interface AuthResponse {
-  status: string
-  message?: string
-  data?: {
-    token: string
-    user: User
-  }
+  token: string
+  user: User
 }
 
 export interface LoginCredentials {
@@ -24,4 +20,9 @@ export interface RegisterData {
   username: string
   email: string
   password: string
+}
+
+export interface AuthError {
+  message: string
+  errors?: Record<string, string>
 }
