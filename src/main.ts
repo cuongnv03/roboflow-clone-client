@@ -1,64 +1,51 @@
 import { createApp } from 'vue'
-import App from './App.vue'
 import { createPinia } from 'pinia'
-import axios from 'axios' // Import axios
+import App from './App.vue'
 import router from './router'
+import axios from 'axios'
 import { useAuthStore } from './stores/auth'
+
 import './assets/main.css'
 
-// Create Vue app
+// Create app instance
 const app = createApp(App)
 
-// 1. Use Pinia
-app.use(createPinia())
+// Initialize Pinia
+const pinia = createPinia()
+app.use(pinia)
 
-// 2. Initialize auth store *after* Pinia is installed
-// This ensures Axios headers are set correctly if a token exists in localStorage
-const authStore = useAuthStore()
-authStore.checkAuth() // Initialize header from localStorage token
-
-// --- Setup Axios Interceptor ---
-// This runs *after* the store is initialized and checkAuth has run
+// Set up Axios interceptors
 axios.interceptors.response.use(
-  (response) => {
-    // Any status code that lie within the range of 2xx cause this function to trigger
-    // Do nothing, just return response
-    return response
-  },
+  (response) => response,
   (error) => {
-    // Any status codes that falls outside the range of 2xx cause this function to trigger
-    console.log(
-      'Axios error interceptor caught:',
-      error.response?.status,
-      error.response?.data?.message,
-    )
-    // Check if the error is a 401 Unauthorized
+    // Handle 401 Unauthorized errors
     if (error.response && error.response.status === 401) {
-      console.log('Interceptor: Detected 401 Unauthorized. Logging out.')
-      // Access the store instance directly (since Pinia is already installed)
-      const store = useAuthStore()
-      // Only logout if user was previously considered authenticated
-      if (store.isAuthenticated) {
-        store.logout() // Clear token and user data from store and localStorage
-        // Use router instance to redirect. Ensure router is available here.
-        // Using router.push directly might be tricky if router isn't ready.
-        // A common pattern is to redirect via window.location or have App.vue watch isAuthenticated
-        // window.location.href = '/login'; // Force reload to login page
-        // Or better: Use router instance if readily available
-        router.push({ name: 'login', query: { sessionExpired: 'true' } }).catch((err) => {
-          // Catch navigation errors if already on login page etc.
-          console.warn('Redirect to login failed:', err.message)
+      const authStore = useAuthStore()
+
+      // Only logout if user was previously authenticated
+      if (authStore.isAuthenticated) {
+        console.log('Token expired or invalid. Logging out.')
+        authStore.logout()
+        router.push({
+          name: 'login',
+          query: {
+            expired: 'true',
+            redirect: router.currentRoute.value.fullPath,
+          },
         })
       }
     }
-    // Important: Promise.reject(error) forwards the error to the original catch block (e.g., in store actions)
+
     return Promise.reject(error)
   },
 )
-// --- End Axios Interceptor Setup ---
 
-// 3. Use Router (Navigation guards might depend on initialized store)
+// Initialize auth state (must come after pinia setup)
+const authStore = useAuthStore()
+authStore.checkAuth()
+
+// Initialize router
 app.use(router)
 
-// 4. Mount App
+// Mount app
 app.mount('#app')

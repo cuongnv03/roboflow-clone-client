@@ -1,36 +1,30 @@
 <template>
-  <button
-    :aria-checked="checked"
-    role="checkbox"
-    type="button"
-    :class="[
-      'peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background flex items-center justify-center transition',
-      checked ? 'bg-primary text-primary-foreground' : 'bg-white',
-      props.class
-    ]"
-    v-bind="$attrs"
-    @click="toggle"
-  >
-    <Check v-if="checked" class="h-4 w-4" />
-  </button>
+  <div class="flex items-center">
+    <input type="checkbox" :id="id" :checked="modelValue" @change="$emit('update:modelValue', $event.target.checked)"
+      class="h-4 w-4 rounded border-gray-300 text-brand-purple focus:ring-brand-purple" v-bind="$attrs" />
+    <label v-if="label" :for="id" class="ml-2 block text-sm text-gray-700">
+      {{ label }}
+    </label>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { Check } from 'lucide-vue-next'
+import { computed } from 'vue';
 
-const props = defineProps<{
-  modelValue?: boolean
-  class?: string
-}>()
+const props = defineProps({
+  modelValue: {
+    type: Boolean,
+    default: false
+  },
+  label: {
+    type: String,
+    default: ''
+  },
+  id: {
+    type: String,
+    default: () => `checkbox-${Math.random().toString(36).substring(2, 9)}`
+  }
+});
 
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
-}>()
-
-const checked = computed(() => !!props.modelValue)
-
-function toggle() {
-  emit('update:modelValue', !checked.value)
-}
+defineEmits(['update:modelValue']);
 </script>

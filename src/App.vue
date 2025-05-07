@@ -10,7 +10,4 @@ const authStore = useAuthStore();
 
 // Initialize auth state on load
 authStore.checkAuth();
-
 </script>
-
-<style></style>

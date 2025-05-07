@@ -1,125 +1,117 @@
-// src/stores/auth.ts
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import authService from '@/services/authService'; // Import auth service
-
-// Define types for user data (adjust based on backend)
-interface User {
-  userId: number;
-  username: string;
-  email: string;
-}
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import authService from '@/services/authService'
+import type { User } from '@/types/user'
 
 export const useAuthStore = defineStore('auth', () => {
-  // Initialize state from localStorage
-  const token = ref<string | null>(localStorage.getItem('authToken') || null);
-  const user = ref<User | null>(() => {
-    const storedUser = localStorage.getItem('authUser');
+  // State
+  const token = ref<string | null>(localStorage.getItem('authToken') || null)
+  const user = ref<User | null>(null)
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  // Initialize user from localStorage if available
+  const storedUser = localStorage.getItem('authUser')
+  if (storedUser) {
     try {
-      return storedUser ? JSON.parse(storedUser) : null;
+      user.value = JSON.parse(storedUser)
     } catch (e) {
-      console.error('Failed to parse stored user:', e);
-      localStorage.removeItem('authUser'); // Clear invalid stored data
-      return null;
+      console.error('Failed to parse stored user:', e)
+      localStorage.removeItem('authUser')
     }
-  });
-  const loading = ref(false); // Add loading state
-  const error = ref<string | null>(null); // Add error state
-
-  // --- Getters ---
-  const isAuthenticated = computed(() => !!token.value && !!user.value); // Check both token and user
-  const authToken = computed(() => token.value);
-  const currentUser = computed(() => user.value);
-  const isLoading = computed(() => loading.value);
-  const authError = computed(() => error.value);
-
-  // --- Actions ---
-
-  // Function to set auth data (token and user) and store it
-  function setAuthData(newToken: string | null, newUser: User | null) {
-    token.value = newToken;
-    user.value = newUser;
-    error.value = null; // Clear error on successful auth change
-
-    if (newToken) {
-      localStorage.setItem('authToken', newToken);
-    } else {
-      localStorage.removeItem('authToken');
-    }
-    if (newUser) {
-      localStorage.setItem('authUser', JSON.stringify(newUser));
-    } else {
-      localStorage.removeItem('authUser');
-    }
-    // The Axios header is now managed in the authService
   }
 
-  // Login Action
+  // Getters
+  const isAuthenticated = computed(() => !!token.value && !!user.value)
+  const currentUser = computed(() => user.value)
+  const isLoading = computed(() => loading.value)
+  const authError = computed(() => error.value)
+
+  // Actions
+  function setAuthData(newToken: string | null, newUser: User | null) {
+    token.value = newToken
+    user.value = newUser
+    error.value = null
+
+    if (newToken) {
+      localStorage.setItem('authToken', newToken)
+    } else {
+      localStorage.removeItem('authToken')
+    }
+
+    if (newUser) {
+      localStorage.setItem('authUser', JSON.stringify(newUser))
+    } else {
+      localStorage.removeItem('authUser')
+    }
+
+    // Update Axios auth header
+    authService.initializeAuthHeader(newToken)
+  }
+
   async function login(identifier: string, password: string): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    loading.value = true
+    error.value = null
+
     try {
-      const authData = await authService.login(identifier, password);
-      setAuthData(authData?.token, authData?.user);
+      const authData = await authService.login(identifier, password)
+      setAuthData(authData.token, authData.user)
     } catch (err: any) {
-      const message = err.message || 'An unknown error occurred during login.';
-      error.value = message;
-      setAuthData(null, null); // Ensure logout on failure
-      throw new Error(message);
+      const message = err.message || 'An unknown error occurred during login.'
+      error.value = message
+      setAuthData(null, null)
+      throw new Error(message)
     } finally {
-      loading.value = false;
+      loading.value = false
     }
   }
 
   async function register(username: string, email: string, password: string): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    loading.value = true
+    error.value = null
+
     try {
-      await authService.register(username, email, password);
-      console.log('Registration successful');
+      await authService.register(username, email, password)
       // Optionally, automatically login the user after registration
-      // await login(email, password);
+      await login(email, password)
     } catch (err: any) {
-      const message = err.message || 'An unknown error occurred during registration.';
-      error.value = message;
-      throw new Error(message);
+      const message = err.message || 'An unknown error occurred during registration.'
+      error.value = message
+      throw new Error(message)
     } finally {
-      loading.value = false;
+      loading.value = false
     }
   }
 
-  function logout() {
-    console.log('Logging out via store action');
-    authService.logout(); // Clear token in service (and localStorage)
-    setAuthData(null, null);
-    // Actual redirection should happen where logout is called or via router guard
+  async function logout() {
+    authService.logout()
+    setAuthData(null, null)
+    // NOTE: Router redirect should happen where logout is called
   }
 
   async function fetchUserProfile() {
-    if (!token.value) return;
+    if (!token.value) return
 
-    loading.value = true;
+    loading.value = true
     try {
-      const profile = await authService.fetchUserProfile();
+      const profile = await authService.fetchUserProfile()
       if (profile) {
-        user.value = profile;
+        user.value = profile
       } else {
-        logout(); // Token có thể không hợp lệ
+        logout() // Token may be invalid
       }
     } catch (err) {
-      console.error('Failed to fetch profile:', err);
-      logout(); // Token có thể không hợp lệ
+      console.error('Failed to fetch profile:', err)
+      logout() // Token may be invalid
     } finally {
-      loading.value = false;
+      loading.value = false
     }
   }
 
-  // checkAuth is now primarily for initializing auth state on app load
   function checkAuth() {
-    console.log('Checking auth status from localStorage...');
-    authService.initializeAuthHeader(token.value); // Initialize Axios header
+    authService.initializeAuthHeader(token.value)
     if (token.value && !user.value) {
-      fetchUserProfile();
+      fetchUserProfile()
     }
   }
 
@@ -127,15 +119,14 @@ export const useAuthStore = defineStore('auth', () => {
     // State
     token,
     user,
-    loading, // Expose loading state
-    error, // Expose error state
+    loading,
+    error,
 
     // Getters
     isAuthenticated,
-    authToken,
     currentUser,
-    isLoading, // Expose computed loading state
-    authError, // Expose computed error state
+    isLoading,
+    authError,
 
     // Actions
     login,
@@ -144,5 +135,5 @@ export const useAuthStore = defineStore('auth', () => {
     fetchUserProfile,
     checkAuth,
     setAuthData,
-  };
-});
+  }
+})

@@ -1,30 +1,59 @@
 <template>
-  <div :class="badgeClass" v-bind="$attrs">
-    <slot />
-  </div>
+  <span :class="[
+    'inline-flex items-center justify-center rounded-full text-xs font-medium',
+    variantClass,
+    sizeClass,
+    props.class
+  ]" v-bind="$attrs">
+    <slot></slot>
+  </span>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed } from 'vue';
 
-const props = defineProps<{
-  variant?: 'default' | 'secondary' | 'destructive' | 'outline'
-  class?: string
-}>()
+const props = defineProps({
+  variant: {
+    type: String,
+    default: 'default',
+    validator: (val: string) => ['default', 'primary', 'success', 'warning', 'danger', 'info'].includes(val)
+  },
+  size: {
+    type: String,
+    default: 'default',
+    validator: (val: string) => ['sm', 'default', 'lg'].includes(val)
+  },
+  class: {
+    type: String,
+    default: ''
+  }
+});
 
-const badgeClass = computed(() =>
-  [
-    'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-    props.variant === 'default' &&
-    'bg-primary text-primary-foreground border-transparent hover:bg-primary/80',
-    props.variant === 'secondary' &&
-    'bg-secondary text-secondary-foreground border-transparent hover:bg-secondary/80',
-    props.variant === 'destructive' &&
-    'bg-destructive text-destructive-foreground border-transparent hover:bg-destructive/80',
-    props.variant === 'outline' && 'text-foreground',
-    props.class,
-  ]
-    .filter(Boolean)
-    .join(' ')
-)
+const variantClass = computed(() => {
+  switch (props.variant) {
+    case 'primary':
+      return 'bg-brand-purple text-white';
+    case 'success':
+      return 'bg-green-100 text-green-800';
+    case 'warning':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'danger':
+      return 'bg-red-100 text-red-800';
+    case 'info':
+      return 'bg-blue-100 text-blue-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+});
+
+const sizeClass = computed(() => {
+  switch (props.size) {
+    case 'sm':
+      return 'px-1.5 py-0.5 text-xs';
+    case 'lg':
+      return 'px-3 py-1 text-sm';
+    default:
+      return 'px-2 py-0.5 text-xs';
+  }
+});
 </script>
