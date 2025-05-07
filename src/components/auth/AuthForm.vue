@@ -105,7 +105,7 @@ const handleSignup = async (userData: {
         isSignUp.value = false;
 
         // Optional: automatically log in after successful registration
-        // await handleLogin({ email: userData.email, password: userData.password });
+        await handleLogin({ email: userData.email, password: userData.password });
     } catch (error: any) {
         if (error.errors) {
             // Handle field-specific errors
