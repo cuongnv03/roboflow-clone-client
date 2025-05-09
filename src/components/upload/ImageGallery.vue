@@ -207,37 +207,6 @@
                             </button>
                         </div>
                     </div>
-
-                    <!-- Tags -->
-                    <div>
-                        <h4 class="font-medium text-gray-900 mb-2">Tags</h4>
-                        <div class="flex flex-wrap gap-2">
-                            <span v-for="tag in previewImage.tags" :key="tag"
-                                class="inline-flex items-center bg-gray-100 rounded-full px-3 py-1 text-sm font-medium text-gray-800">
-                                {{ tag }}
-                                <button type="button" @click="removeTagFromImage(previewImage.id, tag)"
-                                    class="ml-1.5 inline-flex items-center justify-center rounded-full h-4 w-4 bg-gray-200 hover:bg-gray-300 text-gray-500">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20"
-                                        fill="currentColor">
-                                        <path fill-rule="evenodd"
-                                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-                            </span>
-                        </div>
-
-                        <!-- Add new tag -->
-                        <div class="flex mt-2">
-                            <input type="text" v-model="newImageTag"
-                                class="flex-1 rounded-l-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent"
-                                placeholder="Add a tag" @keypress.enter.prevent="addTagToImage" />
-                            <button type="button" @click="addTagToImage"
-                                class="inline-flex items-center px-3 py-1.5 text-sm border border-l-0 border-gray-300 rounded-r-md bg-gray-50 text-gray-500 hover:bg-gray-100">
-                                Add
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -440,46 +409,6 @@ const navigateImage = (direction: number) => {
     const newIndex = currentImageIndex.value + direction;
     if (newIndex >= 0 && newIndex < filteredImages.value.length) {
         previewImage.value = filteredImages.value[newIndex];
-    }
-};
-
-const addTagToImage = async () => {
-    if (previewImage.value && newImageTag.value.trim()) {
-        const tag = newImageTag.value.trim();
-        const currentTags = [...previewImage.value.tags];
-
-        if (!currentTags.includes(tag)) {
-            const newTags = [...currentTags, tag];
-
-            try {
-                // Update tags on server
-                await imageStore.updateImageTags(projectId.value, previewImage.value.id, newTags);
-
-                // Add to available tags
-                imageStore.addTag(tag);
-
-                // Reset input
-                newImageTag.value = '';
-            } catch (error) {
-                console.error('Failed to add tag:', error);
-                // Show error notification
-            }
-        }
-    }
-};
-
-const removeTagFromImage = async (imageId: number, tagToRemove: string) => {
-    const image = imageStore.images.find(img => img.id === imageId);
-    if (image) {
-        const newTags = image.tags.filter(t => t !== tagToRemove);
-
-        try {
-            // Update tags on server
-            await imageStore.updateImageTags(projectId.value, imageId, newTags);
-        } catch (error) {
-            console.error('Failed to remove tag:', error);
-            // Show error notification
-        }
     }
 };
 

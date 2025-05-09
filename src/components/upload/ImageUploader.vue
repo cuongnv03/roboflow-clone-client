@@ -9,39 +9,6 @@
                     placeholder="Enter a name for this batch" />
                 <p class="mt-1 text-xs text-gray-500">Group your uploads for easier organization</p>
             </div>
-
-            <div>
-                <label for="newTag" class="block text-sm font-medium text-gray-700 mb-1">Add Tags</label>
-                <div class="flex">
-                    <input id="newTag" v-model="newTag" type="text"
-                        class="flex-1 rounded-l-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent"
-                        placeholder="Add a tag" @keypress.enter.prevent="addTag" />
-                    <button type="button" @click="addTag"
-                        class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 rounded-r-md bg-gray-50 text-gray-500 hover:bg-gray-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Selected Tags -->
-        <div v-if="selectedTags.length > 0" class="flex flex-wrap gap-2">
-            <span v-for="tag in selectedTags" :key="tag"
-                class="inline-flex items-center bg-gray-100 rounded-full px-3 py-1 text-sm font-medium text-gray-800">
-                {{ tag }}
-                <button type="button" @click="removeTag(tag)"
-                    class="ml-1.5 inline-flex items-center justify-center rounded-full h-4 w-4 bg-gray-200 hover:bg-gray-300 text-gray-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd"
-                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                            clip-rule="evenodd" />
-                    </svg>
-                </button>
-            </span>
         </div>
 
         <!-- Drag & Drop Zone -->
@@ -286,18 +253,6 @@ const uploadAllImages = async () => {
         isUploading.value = false;
         uploadProgress.value = 0;
     }
-};
-
-const addTag = () => {
-    const trimmedTag = newTag.value.trim();
-    if (trimmedTag && !selectedTags.value.includes(trimmedTag)) {
-        selectedTags.value.push(trimmedTag);
-        newTag.value = '';
-    }
-};
-
-const removeTag = (tag: string) => {
-    selectedTags.value = selectedTags.value.filter(t => t !== tag);
 };
 
 // Format helpers
