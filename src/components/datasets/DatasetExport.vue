@@ -114,7 +114,7 @@
                 </div>
 
                 <div class="text-center">
-                    <a :href="exportResult.downloadUrl"
+                    <a :href="getFullDownloadUrl(exportResult.downloadUrl)"
                         class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-purple hover:bg-brand-purple-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-purple"
                         target="_blank" rel="noopener noreferrer">
                         <DownloadIcon class="h-5 w-5 mr-2" />
@@ -143,6 +143,8 @@ import { ref, computed, watch, onMounted } from 'vue';
 import Button from '@/components/common/Button.vue';
 import Modal from '@/components/common/Modal.vue';
 import type { DatasetExportOptionsDTO, DatasetExportResultDTO } from '@/types/dataset';
+
+const SERVER_URL = 'http://localhost:5000';
 
 const props = defineProps<{
     datasetId: number;
@@ -240,6 +242,16 @@ const startExport = () => {
         includeImages: exportOptions.value.includeImages,
         exportSplits: selectedSplits.value
     });
+};
+
+const getFullDownloadUrl = (relativeUrl) => {
+    // If already a full URL, return as is
+    if (relativeUrl.startsWith('http')) {
+        return relativeUrl;
+    }
+
+    // Otherwise prepend the API URL
+    return `${SERVER_URL}${relativeUrl}`;
 };
 </script>
 

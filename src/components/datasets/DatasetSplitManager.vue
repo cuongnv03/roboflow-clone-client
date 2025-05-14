@@ -14,7 +14,7 @@
                     <span class="ml-2 px-2 py-0.5 rounded-full text-xs font-medium" :class="[
                         `bg-${split.color}-100 text-${split.color}-800`
                     ]">
-                        {{ safeImagesBySpilt[split.id].length }}
+                        {{ imagesBySplit[split.id].length }}
                     </span>
                 </button>
             </nav>
@@ -44,7 +44,7 @@
             <!-- Image count in current split -->
             <div class="flex justify-between items-center mb-2">
                 <p class="text-sm text-gray-500">
-                    {{ safeImagesBySpilt[activeTab].length }} images in this split
+                    {{ imagesBySplit[activeTab].length }} images in this split
                 </p>
 
                 <div class="flex items-center">
@@ -55,8 +55,8 @@
                         </button>
                     </div>
 
-                    <div class="relative" v-if="selectedImages.length > 0">
-                        <button @click="showMoveMenu = !showMoveMenu"
+                    <div class="relative move-menu-container" v-if="selectedImages.length > 0">
+                        <button @click.stop="toggleMoveMenu"
                             class="btn btn-outline text-sm py-1 px-3 flex items-center">
                             Move to
                             <svg class="ml-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
@@ -68,14 +68,22 @@
                         </button>
 
                         <div v-if="showMoveMenu"
-                            class="absolute right-0 mt-1 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-                            <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
-                                <button v-for="split in splits.filter(s => s.id !== activeTab)" :key="split.id"
-                                    @click="moveSelectedImages(split.id)"
-                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                                    role="menuitem">
-                                    {{ split.name }} Split
-                                </button>
+                            class="absolute right-0 mt-1 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                            <div class="py-1 max-h-60 overflow-auto" role="menu" aria-orientation="vertical">
+                                <template v-for="split in availableSplits" :key="split.id">
+                                    <button @click="moveSelectedImages(split.id)"
+                                        class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                        role="menuitem">
+                                        <span class="flex items-center">
+                                            <div :class="`rounded-full bg-${split.color}-500 w-3 h-3 mr-2`"></div>
+                                            Move to {{ split.name }}
+                                        </span>
+                                    </button>
+                                </template>
+
+                                <div v-if="availableSplits.length === 0" class="px-4 py-2 text-sm text-gray-500 italic">
+                                    No other splits available
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -84,7 +92,7 @@
 
             <!-- Image grid -->
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                <div v-for="imageId in safeImagesBySpilt[activeTab]" :key="imageId"
+                <div v-for="imageId in imagesBySplit[activeTab]" :key="imageId"
                     class="relative overflow-hidden rounded-lg border hover:border-brand-purple transition-colors"
                     :class="[selectedImages.includes(imageId) ? 'border-brand-purple' : 'border-gray-200']">
                     <!-- Image thumbnail -->
@@ -96,7 +104,7 @@
             </div>
 
             <!-- Empty split state -->
-            <div v-if="safeImagesBySpilt[activeTab].length === 0" class="text-center py-8">
+            <div v-if="imagesBySplit[activeTab].length === 0" class="text-center py-8">
                 <p class="text-gray-500">No images in this split.</p>
             </div>
         </div>
@@ -112,7 +120,7 @@ import ImageThumbnail from './ImageThumbnail.vue';
 
 const props = defineProps<{
     datasetId: number;
-    imagesBySpilt: Record<string, number[]>;
+    imagesBySplit: Record<string, number[]>;
     totalImages: number;
     isLoading: boolean;
 }>();
@@ -136,26 +144,15 @@ const splits = [
 
 // Close menu when clicking outside
 const handleClickOutside = (event: MouseEvent) => {
-    if (showMoveMenu.value) {
+    // Only close if clicking outside the dropdown and its toggle button
+    if (showMoveMenu.value &&
+        !(event.target as Element).closest('.move-menu-container')) {
         showMoveMenu.value = false;
     }
 };
 
-const safeImagesBySpilt = computed(() => {
-    const defaultSplits = {
-        train: [],
-        valid: [],
-        test: []
-    };
-
-    // Nếu không có dữ liệu, trả về object mặc định
-    if (!props.imagesBySpilt) return defaultSplits;
-
-    // Merge với dữ liệu đã có để đảm bảo mọi split đều có giá trị
-    return {
-        ...defaultSplits,
-        ...props.imagesBySpilt
-    };
+const availableSplits = computed(() => {
+    return splits.filter(s => s.id !== activeTab.value);
 });
 
 // Lifecycle hooks
@@ -177,17 +174,29 @@ const toggleSelectImage = (imageId: number) => {
     }
 };
 
-const moveSelectedImages = (targetSplit: string) => {
+const moveSelectedImages = async (targetSplit: string) => {
     if (selectedImages.value.length === 0) return;
 
-    // Update split assignments
-    emit('update-splits', {
-        imageIds: selectedImages.value,
-        split: targetSplit
-    });
+    try {
+        // Update split assignments
+        await emit('update-splits', {
+            imageIds: selectedImages.value,
+            split: targetSplit
+        });
 
-    // Close menu and clear selection
-    showMoveMenu.value = false;
-    selectedImages.value = [];
+        // Show success message or feedback
+        console.log(`Moved ${selectedImages.value.length} images to ${targetSplit} split`);
+    } catch (error) {
+        // Handle error
+        console.error('Failed to move images:', error);
+    } finally {
+        // Close menu and clear selection regardless of success or failure
+        showMoveMenu.value = false;
+        selectedImages.value = [];
+    }
+};
+
+const toggleMoveMenu = () => {
+    showMoveMenu.value = !showMoveMenu.value;
 };
 </script>
