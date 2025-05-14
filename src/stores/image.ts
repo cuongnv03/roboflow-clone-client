@@ -239,6 +239,35 @@ export const useImageStore = defineStore('image', () => {
     error.value = null
   }
 
+  async function fetchImageById(projectId: number, imageId: number): Promise<Image | null> {
+    loading.value = true
+    error.value = null
+
+    try {
+      // First check if the image is already in the store
+      const existingImage = images.value.find((img) => img.id === imageId)
+      if (existingImage) {
+        return existingImage
+      }
+
+      // If not, fetch it from the server
+      const image = await imageService.getImageById(projectId, imageId)
+
+      // Add it to our local cache if it's not already there
+      if (!images.value.some((img) => img.id === image.id)) {
+        images.value.push(image)
+      }
+
+      return image
+    } catch (err: any) {
+      error.value = err.message || 'Failed to fetch image'
+      console.error(`Error fetching image ${imageId}:`, err)
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     // State
     images,
@@ -271,5 +300,6 @@ export const useImageStore = defineStore('image', () => {
     addTag,
     setCurrentBatchName,
     resetState,
+    fetchImageById,
   }
 })

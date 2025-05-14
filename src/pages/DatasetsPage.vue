@@ -1,76 +1,147 @@
 <template>
     <div>
         <div class="mb-6">
-            <h1 class="text-2xl font-bold text-gray-900">Annotate Images</h1>
-            <p class="text-gray-600 mt-1">Create annotations for your project images</p>
+            <h1 class="text-2xl font-bold text-gray-900">Datasets</h1>
+            <p class="text-gray-600 mt-1">Prepare your data for training and export</p>
         </div>
 
-        <div v-if="!imageStore.images.length && !imageStore.isLoading"
-            class="text-center py-16 bg-white rounded-lg shadow">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none"
-                viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <h2 class="text-xl font-semibold text-gray-700 mb-2">No Images Available</h2>
-            <p class="text-gray-500 mb-6">Upload images first to start annotating</p>
-            <Button variant="primary" @click="goToUpload">
-                Go to Upload Page
-            </Button>
-        </div>
+        <!-- Create dataset form -->
+        <Card v-if="showCreateForm" class="mb-8">
+            <template #header>
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-semibold">Create New Dataset</h2>
+                    <button @click="showCreateForm = false" class="text-gray-400 hover:text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+            </template>
 
-        <div v-else-if="imageStore.isLoading" class="flex justify-center py-20">
-            <svg class="animate-spin h-10 w-10 text-brand-purple" xmlns="http://www.w3.org/2000/svg" fill="none"
-                viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                </path>
-            </svg>
-        </div>
+            <DatasetForm :project-id="projectId" :is-loading="datasetStore.isLoading" @submit="handleCreateDataset"
+                @cancel="showCreateForm = false" />
+        </Card>
 
-        <div v-else class="bg-white rounded-lg shadow">
-            <p class="p-8 text-center text-gray-500">
-                Annotation tool will be implemented in the next phase.
-            </p>
-        </div>
+        <!-- Export dataset modal -->
+        <Modal v-model="showExportModal" title="Export Dataset">
+            <DatasetExport v-if="showExportModal && datasetToExport" :dataset-id="datasetToExport.id"
+                :project-type="projectType" :available-formats="datasetStore.exportFormats"
+                :preview-sample="datasetStore.exportPreview" :export-result="datasetStore.exportResult"
+                :preview-loading="datasetStore.isLoading" :is-exporting="datasetStore.isExporting"
+                @cancel="showExportModal = false" @export="handleExportDataset" @load-preview="loadExportPreview"
+                @load-formats="loadExportFormats" />
+        </Modal>
+
+        <!-- Datasets list -->
+        <DatasetList :datasets="datasetStore.datasets" :is-loading="datasetStore.isLoading"
+            @create="showCreateForm = true" @edit="navigateToDataset" @export="openExportModal"
+            @delete="handleDeleteDataset" />
     </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { useImageStore } from '@/stores/image';
-import ProjectLayout from '@/layouts/ProjectLayout.vue';
-import Button from '@/components/common/Button.vue';
+import { ref, onMounted, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useDatasetStore } from '@/stores/dataset';
+import { useProjectStore } from '@/stores/project';
+import type { DatasetResponseDTO, DatasetCreateDTO, DatasetExportOptionsDTO } from '@/types/dataset';
+import Card from '@/components/common/Card.vue';
+import Modal from '@/components/common/Modal.vue';
+import DatasetForm from '@/components/datasets/DatasetForm.vue';
+import DatasetList from '@/components/datasets/DatasetList.vue';
+import DatasetExport from '@/components/datasets/DatasetExport.vue';
 
-// Router and route
-const router = useRouter();
+// Router and stores
 const route = useRoute();
-
-// Stores
-const imageStore = useImageStore();
+const router = useRouter();
+const datasetStore = useDatasetStore();
+const projectStore = useProjectStore();
 
 // Get project ID from route
-const projectId = computed(() => route.params.projectId);
+const projectId = computed(() => Number(route.params.projectId));
+
+// Get project type for export format options
+const projectType = computed(() => {
+    return projectStore.activeProject?.type || 'object_detection';
+});
+
+// UI state
+const showCreateForm = ref(false);
+const showExportModal = ref(false);
+const datasetToExport = ref<DatasetResponseDTO | null>(null);
 
 // Lifecycle hooks
 onMounted(async () => {
     if (projectId.value) {
-        await imageStore.fetchProjectImages(Number(projectId.value));
+        await datasetStore.fetchDatasets(projectId.value);
     }
 });
 
 // Methods
-const goToUpload = () => {
+const handleCreateDataset = async (data: DatasetCreateDTO) => {
+    try {
+        const newDataset = await datasetStore.createDataset(data);
+        showCreateForm.value = false;
+
+        // Navigate to the new dataset
+        router.push({
+            name: 'dataset-view',
+            params: {
+                projectId: projectId.value.toString(),
+                datasetId: newDataset.id.toString()
+            }
+        });
+    } catch (error) {
+        console.error('Failed to create dataset:', error);
+    }
+};
+
+const navigateToDataset = (dataset: DatasetResponseDTO) => {
     router.push({
-        name: 'project-upload',
-        params: { projectId: projectId.value }
+        name: 'dataset-view',
+        params: {
+            projectId: projectId.value.toString(),
+            datasetId: dataset.id.toString()
+        }
     });
 };
 
-// Helper function for reactive computed properties
-function computed<T>(fn: () => T): { value: T } {
-    return { value: fn() };
-}
+const openExportModal = (dataset: DatasetResponseDTO) => {
+    datasetToExport.value = dataset;
+    showExportModal.value = true;
+};
+
+const handleDeleteDataset = async (datasetId: number) => {
+    try {
+        await datasetStore.deleteDataset(datasetId);
+    } catch (error) {
+        console.error('Failed to delete dataset:', error);
+    }
+};
+
+const loadExportFormats = async (projectType: string) => {
+    try {
+        await datasetStore.fetchExportFormats(projectType);
+    } catch (error) {
+        console.error('Failed to load export formats:', error);
+    }
+};
+
+const loadExportPreview = async (datasetId: number, format: string) => {
+    try {
+        await datasetStore.fetchExportPreview(datasetId, format);
+    } catch (error) {
+        console.error('Failed to load export preview:', error);
+    }
+};
+
+const handleExportDataset = async (datasetId: number, options: DatasetExportOptionsDTO) => {
+    try {
+        await datasetStore.exportDataset(datasetId, options);
+    } catch (error) {
+        console.error('Failed to export dataset:', error);
+    }
+};
 </script>

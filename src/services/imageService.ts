@@ -227,6 +227,26 @@ const transformImage = (data: any): Image => {
   }
 }
 
+// Get image by ID
+const getImageById = async (projectId: number, imageId: number): Promise<Image> => {
+  try {
+    const response = await axios.get<{ status: string; message: string; data: any }>(
+      `/projects/${projectId}/images/${imageId}`,
+    )
+
+    if (response.data.status === 'success' && response.data.data) {
+      return transformImage(response.data.data)
+    }
+
+    throw new Error(response.data.message || 'Failed to fetch image')
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data.message || 'Failed to fetch image')
+    }
+    throw error
+  }
+}
+
 export default {
   uploadImage,
   uploadMultipleImages,
@@ -234,4 +254,5 @@ export default {
   getProjectBatches,
   deleteImage,
   updateImageMetadata,
+  getImageById,
 }

@@ -13,6 +13,7 @@ import AnnotatePage from '@/pages/AnnotatePage.vue'
 import DatasetsPage from '@/pages/DatasetsPage.vue'
 import NotFoundPage from '@/pages/NotFoundPage.vue'
 import HomePage from '@/pages/HomePage.vue'
+import DatasetViewPage from '@/pages/DatasetViewPage.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -54,6 +55,12 @@ const routes: Array<RouteRecordRaw> = [
         path: 'datasets',
         name: 'project-dataset',
         component: DatasetsPage,
+        meta: { requiresAuth: true },
+      },
+      {
+        path: 'datasets/:datasetId',
+        name: 'dataset-view',
+        component: DatasetViewPage,
         meta: { requiresAuth: true },
       },
       {
