@@ -89,16 +89,23 @@ export const useAnnotationStore = defineStore('annotation', () => {
     error.value = null
 
     try {
-      const data = {
-        imageId: annotation.imageId,
-        classId: annotation.classId,
-        data: {
-          type: annotation.type,
-          coordinates: annotation.coordinates,
-        },
+      // Create the data object based on annotation type
+      const data: any = {
+        type: annotation.type,
       }
 
-      const createdAnnotation = await annotationService.createAnnotation(data)
+      // Only add coordinates if the annotation type has them
+      if ('coordinates' in annotation) {
+        data.coordinates = annotation.coordinates
+      }
+
+      const createParams = {
+        imageId: annotation.imageId,
+        classId: annotation.classId,
+        data,
+      }
+
+      const createdAnnotation = await annotationService.createAnnotation(createParams)
       annotations.value.push(createdAnnotation)
       selectedAnnotationId.value = createdAnnotation.id || null
 
@@ -207,33 +214,44 @@ export const useAnnotationStore = defineStore('annotation', () => {
 
       if (action.type === 'create') {
         // Hoàn tác tạo mới = xóa
-        await annotationService.deleteAnnotation(action.annotation.id as number)
-        annotations.value = annotations.value.filter((a) => a.id !== action.annotation.id)
+        if (action.annotation.id) {
+          await annotationService.deleteAnnotation(action.annotation.id)
+          annotations.value = annotations.value.filter((a) => a.id !== action.annotation.id)
 
-        if (selectedAnnotationId.value === action.annotation.id) {
-          selectedAnnotationId.value = null
+          if (selectedAnnotationId.value === action.annotation.id) {
+            selectedAnnotationId.value = null
+          }
         }
       } else if (action.type === 'update' && action.previous) {
         // Hoàn tác cập nhật = khôi phục trạng thái trước
         const { id, imageId, ...updateData } = action.previous
 
-        const updated = await annotationService.updateAnnotation(id as number, updateData)
+        if (id) {
+          const updated = await annotationService.updateAnnotation(id, updateData)
 
-        const index = annotations.value.findIndex((a) => a.id === id)
-        if (index !== -1) {
-          annotations.value[index] = updated
+          const index = annotations.value.findIndex((a) => a.id === id)
+          if (index !== -1) {
+            annotations.value[index] = updated
+          }
         }
       } else if (action.type === 'delete') {
         // Hoàn tác xóa = tạo lại
         const { id, ...createData } = action.annotation
 
+        // Create the data object based on annotation type
+        const data: any = {
+          type: createData.type,
+        }
+
+        // Only add coordinates if the annotation type has them
+        if ('coordinates' in createData) {
+          data.coordinates = createData.coordinates
+        }
+
         const created = await annotationService.createAnnotation({
           imageId: createData.imageId,
           classId: createData.classId,
-          data: {
-            type: createData.type,
-            coordinates: createData.coordinates,
-          },
+          data,
         })
 
         annotations.value.push(created)
@@ -262,34 +280,45 @@ export const useAnnotationStore = defineStore('annotation', () => {
         // Làm lại tạo mới
         const { id, ...createData } = action.annotation
 
+        // Create the data object based on annotation type
+        const data: any = {
+          type: createData.type,
+        }
+
+        // Only add coordinates if the annotation type has them
+        if ('coordinates' in createData) {
+          data.coordinates = createData.coordinates
+        }
+
         const created = await annotationService.createAnnotation({
           imageId: createData.imageId,
           classId: createData.classId,
-          data: {
-            type: createData.type,
-            coordinates: createData.coordinates,
-          },
+          data,
         })
 
         annotations.value.push(created)
-        selectedAnnotationId.value = created.id
+        selectedAnnotationId.value = created.id || null
       } else if (action.type === 'update') {
         // Làm lại cập nhật
         const { id, imageId, ...updateData } = action.annotation
 
-        const updated = await annotationService.updateAnnotation(id as number, updateData)
+        if (id) {
+          const updated = await annotationService.updateAnnotation(id, updateData)
 
-        const index = annotations.value.findIndex((a) => a.id === id)
-        if (index !== -1) {
-          annotations.value[index] = updated
+          const index = annotations.value.findIndex((a) => a.id === id)
+          if (index !== -1) {
+            annotations.value[index] = updated
+          }
         }
       } else if (action.type === 'delete') {
         // Làm lại xóa
-        await annotationService.deleteAnnotation(action.annotation.id as number)
-        annotations.value = annotations.value.filter((a) => a.id !== action.annotation.id)
+        if (action.annotation.id) {
+          await annotationService.deleteAnnotation(action.annotation.id)
+          annotations.value = annotations.value.filter((a) => a.id !== action.annotation.id)
 
-        if (selectedAnnotationId.value === action.annotation.id) {
-          selectedAnnotationId.value = null
+          if (selectedAnnotationId.value === action.annotation.id) {
+            selectedAnnotationId.value = null
+          }
         }
       }
     } catch (err: any) {
@@ -393,11 +422,12 @@ export const useAnnotationStore = defineStore('annotation', () => {
 
     // Create actual annotation based on the drawing
     if (tool === 'bbox' && drawingState.value.temporaryAnnotation) {
+      const tempAnnotation = drawingState.value.temporaryAnnotation as any
       const bboxAnnotation = {
         imageId: currentImageId.value,
         classId: selectedClassId.value,
         type: 'bbox' as const,
-        coordinates: (drawingState.value.temporaryAnnotation as any).coordinates,
+        coordinates: tempAnnotation.coordinates,
       }
 
       // Only create annotation if it has valid dimensions

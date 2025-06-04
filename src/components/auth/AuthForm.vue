@@ -27,7 +27,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import AuthHeader from './AuthHeader.vue';
 import LoginForm from './LoginForm.vue';
-import SignupForm from './SignupForm.vue';
+import SignupForm from './SignUpForm.vue';
 
 // Component state
 const isSignUp = ref(false);

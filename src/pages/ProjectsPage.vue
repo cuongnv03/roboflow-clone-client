@@ -45,7 +45,7 @@
 
         <!-- Edit Project Modal -->
         <Modal v-model="showEditModal" title="Edit Project">
-            <ProjectForm v-if="showEditModal" :project="projectToEdit" :is-loading="projectStore.isLoading"
+            <ProjectForm v-if="showEditModal" :project="projectToEdit ?? undefined" :is-loading="projectStore.isLoading"
                 :is-edit="true" @submit="handleUpdateProject" @cancel="showEditModal = false" />
         </Modal>
 

@@ -40,7 +40,7 @@
                             <div>
                                 <label for="trainSplit" class="block text-xs text-gray-500">Train</label>
                                 <div class="flex items-center">
-                                    <input id="trainSplit" v-model.number="formData.splitRatio.train" type="number"
+                                    <input id="trainSplit" v-model.number="formData.splitRatio!.train" type="number"
                                         min="0" max="1" step="0.05"
                                         class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent"
                                         @input="updateSplitRatio('train')" />
@@ -50,7 +50,7 @@
                             <div>
                                 <label for="validSplit" class="block text-xs text-gray-500">Validation</label>
                                 <div class="flex items-center">
-                                    <input id="validSplit" v-model.number="formData.splitRatio.valid" type="number"
+                                    <input id="validSplit" v-model.number="formData.splitRatio!.valid" type="number"
                                         min="0" max="1" step="0.05"
                                         class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent"
                                         @input="updateSplitRatio('valid')" />
@@ -60,7 +60,7 @@
                             <div>
                                 <label for="testSplit" class="block text-xs text-gray-500">Test</label>
                                 <div class="flex items-center">
-                                    <input id="testSplit" v-model.number="formData.splitRatio.test" type="number"
+                                    <input id="testSplit" v-model.number="formData.splitRatio!.test" type="number"
                                         min="0" max="1" step="0.05"
                                         class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent"
                                         @input="updateSplitRatio('test')" />
@@ -71,11 +71,11 @@
                         <div class="mt-1">
                             <div class="w-full bg-gray-200 rounded-full h-2.5 mb-1">
                                 <div class="flex h-2.5 rounded-full overflow-hidden">
-                                    <div class="bg-blue-600" :style="`width: ${formData.splitRatio.train * 100}%`">
+                                    <div class="bg-blue-600" :style="`width: ${formData.splitRatio!.train * 100}%`">
                                     </div>
-                                    <div class="bg-green-500" :style="`width: ${formData.splitRatio.valid * 100}%`">
+                                    <div class="bg-green-500" :style="`width: ${formData.splitRatio!.valid * 100}%`">
                                     </div>
-                                    <div class="bg-purple-500" :style="`width: ${formData.splitRatio.test * 100}%`">
+                                    <div class="bg-purple-500" :style="`width: ${formData.splitRatio!.test * 100}%`">
                                     </div>
                                 </div>
                             </div>
@@ -355,7 +355,7 @@ const formData = reactive<DatasetCreateDTO>({
 
 // Computed properties
 const splitTotal = computed(() => {
-    return formData.splitRatio.train + formData.splitRatio.valid + formData.splitRatio.test;
+    return formData.splitRatio!.train + formData.splitRatio!.valid + formData.splitRatio!.test;
 });
 
 const isFormValid = computed(() => {
@@ -376,21 +376,23 @@ const updateSplitRatio = (field: 'train' | 'valid' | 'test') => {
         const otherFields = ['train', 'valid', 'test'].filter(f => f !== field) as Array<'train' | 'valid' | 'test'>;
 
         // Distribute excess proportionally between other fields
-        const totalOthers = otherFields.reduce((sum, f) => sum + formData.splitRatio[f], 0);
+        const totalOthers = otherFields.reduce((sum, f) => sum + (formData.splitRatio?.[f] || 0), 0);
 
-        if (totalOthers > 0) {
+        if (totalOthers > 0 && formData.splitRatio) {
             otherFields.forEach(f => {
-                const proportion = formData.splitRatio[f] / totalOthers;
-                formData.splitRatio[f] = Math.max(0, formData.splitRatio[f] - excess * proportion);
+                const proportion = formData.splitRatio![f] / totalOthers;
+                formData.splitRatio![f] = Math.max(0, formData.splitRatio![f] - excess * proportion);
             });
         }
     }
 
     // Round to 2 decimal places
-    Object.keys(formData.splitRatio).forEach(key => {
-        formData.splitRatio[key as keyof typeof formData.splitRatio] =
-            Math.round(formData.splitRatio[key as keyof typeof formData.splitRatio] * 100) / 100;
-    });
+    if (formData.splitRatio) {
+        Object.keys(formData.splitRatio).forEach(key => {
+            formData.splitRatio![key as keyof typeof formData.splitRatio] =
+                Math.round(formData.splitRatio![key as keyof typeof formData.splitRatio] * 100) / 100;
+        });
+    }
 };
 
 const handleSubmit = () => {

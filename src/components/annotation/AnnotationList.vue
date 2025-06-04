@@ -4,7 +4,8 @@
 
         <!-- Annotation list -->
         <div class="space-y-2 max-h-64 overflow-y-auto pr-2">
-            <div v-for="annotation in annotations" :key="annotation.id" @click="selectAnnotation(annotation.id)"
+            <div v-for="annotation in annotations" :key="annotation.id"
+                @click="annotation.id && selectAnnotation(annotation.id)"
                 class="flex items-center justify-between p-2 rounded-md cursor-pointer transition-colors" :class="[
                     selectedAnnotationId === annotation.id
                         ? 'bg-gray-700 ring-2 ring-brand-purple'
@@ -58,7 +59,7 @@
                     </button>
 
                     <!-- Delete button -->
-                    <button @click.stop="confirmDeleteAnnotation(annotation.id)"
+                    <button @click.stop="annotation.id && confirmDeleteAnnotation(annotation.id)"
                         class="p-1 text-gray-400 hover:text-red-500 rounded-md hover:bg-gray-600 transition-colors"
                         title="Delete annotation">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
@@ -196,9 +197,11 @@ function canEditAnnotation(type: string): boolean {
 
 function editAnnotation(annotation: Annotation) {
     // Thiết lập chế độ chỉnh sửa cho chú thích
-    annotationStore.selectAnnotation(annotation.id);
-    // TODO: Triển khai chế độ chỉnh sửa
-    alert('Edit mode for annotation #' + annotation.id + ' not implemented yet');
+    if (annotation.id) {
+        annotationStore.selectAnnotation(annotation.id);
+        // TODO: Triển khai chế độ chỉnh sửa
+        alert('Edit mode for annotation #' + annotation.id + ' not implemented yet');
+    }
 }
 </script>
 

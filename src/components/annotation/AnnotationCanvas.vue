@@ -51,7 +51,12 @@ const props = defineProps<{
     };
     projectType: string;
     loading: boolean;
-    toolSettings: object;
+    toolSettings: {
+        size?: number;
+        tolerance?: number;
+        contiguous?: boolean;
+        [key: string]: any;
+    };
 }>();
 
 // Refs for canvas elements
@@ -59,9 +64,9 @@ const containerRef = ref<HTMLDivElement | null>(null);
 const imageCanvasRef = ref<HTMLCanvasElement | null>(null);
 const annotationCanvasRef = ref<HTMLCanvasElement | null>(null);
 const drawingCanvasRef = ref<HTMLCanvasElement | null>(null);
-const brushContext = ref(null);
-const brushCanvas = ref(null);
-const magicWandSeedPoint = ref(null);
+const brushContext = ref<CanvasRenderingContext2D | null>(null);
+const brushCanvas = ref<HTMLCanvasElement | null>(null);
+const magicWandSeedPoint = ref<{ x: number; y: number } | null>(null);
 
 // Stores
 const annotationStore = useAnnotationStore();

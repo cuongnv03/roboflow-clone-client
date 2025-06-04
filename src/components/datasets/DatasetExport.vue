@@ -244,7 +244,8 @@ const startExport = () => {
     });
 };
 
-const getFullDownloadUrl = (relativeUrl) => {
+// Helper function to construct full download URLs
+const getFullDownloadUrl = (relativeUrl: string): string => {
     // If already a full URL, return as is
     if (relativeUrl.startsWith('http')) {
         return relativeUrl;

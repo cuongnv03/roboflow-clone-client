@@ -211,7 +211,7 @@ const currentImageId = ref<number | null>(null);
 
 const notification = reactive({
     message: '',
-    type: 'info',
+    type: 'info' as 'info' | 'success' | 'warning' | 'error',
     visible: false
 });
 
@@ -446,7 +446,7 @@ async function updateKeypointVisibility() {
                 annotation.id as number,
                 {
                     coordinates: updatedCoordinates
-                }
+                } as any
             );
         }
     } catch (error) {
@@ -474,7 +474,9 @@ async function updateBboxDimensions() {
 
             await annotationStore.updateAnnotation(
                 annotation.id as number,
-                { coordinates: coords }
+                {
+                    coordinates: coords
+                } as any
             );
         }
     } catch (error) {

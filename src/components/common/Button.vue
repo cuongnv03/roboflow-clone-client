@@ -34,8 +34,9 @@ const props = defineProps({
         validator: (val: string) => ['sm', 'default', 'lg'].includes(val)
     },
     type: {
-        type: String,
-        default: 'button'
+        type: String as () => 'button' | 'submit' | 'reset',
+        default: 'button',
+        validator: (val: string) => ['button', 'submit', 'reset'].includes(val)
     },
     disabled: {
         type: Boolean,

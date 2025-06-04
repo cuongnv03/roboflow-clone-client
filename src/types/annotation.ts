@@ -82,11 +82,14 @@ export type Annotation =
 
 export type DrawingTool = AnnotationType | 'select' | 'move' | 'zoom' | 'pan'
 
-// Annotation creation parameters
+// Annotation creation parameters - updated to handle different types properly
 export interface AnnotationCreateParams {
   imageId: number
   classId: number
-  data: Omit<Annotation, 'id' | 'imageId' | 'classId'>
+  data: {
+    type: AnnotationType
+    coordinates?: any // Optional since classification doesn't have coordinates
+  }
 }
 
 // For tracking temporary annotations being drawn
