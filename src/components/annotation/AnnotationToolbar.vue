@@ -39,7 +39,10 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 import { useAnnotationStore } from '@/stores/annotation';
+import { useToast } from '@/composables/useToast';
 import type { AnnotationType } from '@/types/annotation';
+
+const toast = useToast();
 
 const props = defineProps<{
     projectType: string;
@@ -134,8 +137,7 @@ onMounted(async () => {
 // Methods
 function selectTool(tool: AnnotationType) {
     if (!selectedClass.value) {
-        // Show error or alert user to select a class first
-        alert('Please select a class first');
+        toast.warning('Please select a class first');
         return;
     }
 

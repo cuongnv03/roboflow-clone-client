@@ -1,8 +1,9 @@
 <template>
     <Transition name="notification">
         <div v-if="show"
-            class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-md shadow-lg z-50 text-sm flex items-center">
-            <component :is="icon" class="h-5 w-5 mr-2" />
+            class="fixed bottom-4 left-1/2 transform -translate-x-1/2 text-white px-4 py-2 rounded-md shadow-lg z-50 text-sm flex items-center"
+            :class="bgClass">
+            <component :is="icon" class="h-5 w-5 mr-2 flex-shrink-0" />
             <span>{{ message }}</span>
         </div>
     </Transition>
@@ -26,14 +27,19 @@ const timeout = ref<number | null>(null);
 
 const icon = computed(() => {
     switch (props.type) {
-        case 'success':
-            return Icons.CheckIcon;
-        case 'warning':
-            return Icons.AlertIcon;
-        case 'error':
-            return Icons.XCircleIcon;
-        default:
-            return Icons.InfoIcon;
+        case 'success': return Icons.CheckIcon;
+        case 'warning': return Icons.AlertIcon;
+        case 'error': return Icons.XCircleIcon;
+        default: return Icons.InfoIcon;
+    }
+});
+
+const bgClass = computed(() => {
+    switch (props.type) {
+        case 'success': return 'bg-green-600';
+        case 'warning': return 'bg-yellow-500';
+        case 'error': return 'bg-red-600';
+        default: return 'bg-gray-800';
     }
 });
 

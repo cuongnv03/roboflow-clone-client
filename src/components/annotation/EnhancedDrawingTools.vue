@@ -110,9 +110,12 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useAnnotationStore } from '@/stores/annotation';
+import { useToast } from '@/composables/useToast';
 import type { DrawingTool } from '@/types/annotation';
 import { getDrawingToolsForProjectType, getToolInfo } from '@/utils/drawingToolMapper';
 import * as Icons from './icons';
+
+const toast = useToast();
 import { UndoIcon, RedoIcon } from './icons';
 
 const props = defineProps<{
@@ -211,7 +214,7 @@ const keyboardShortcuts = computed(() => {
 // Phương thức
 function selectTool(tool: DrawingTool) {
     if (!selectedClass.value && !['select', 'move', 'zoom', 'pan'].includes(tool)) {
-        alert('Please select a class first');
+        toast.warning('Please select a class first');
         return;
     }
 

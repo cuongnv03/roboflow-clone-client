@@ -103,7 +103,10 @@ import { ref, computed } from 'vue';
 import { useAnnotationStore } from '@/stores/annotation';
 import Modal from '@/components/common/Modal.vue';
 import Button from '@/components/common/Button.vue';
+import { useToast } from '@/composables/useToast';
 import type { Annotation } from '@/types/annotation';
+
+const toast = useToast();
 import * as Icons from './icons';
 
 // Store
@@ -139,7 +142,7 @@ async function executeDeleteAnnotation() {
         annotationToDelete.value = null;
     } catch (error) {
         console.error('Failed to delete annotation:', error);
-        alert('Failed to delete annotation. Please try again.');
+        toast.error('Failed to delete annotation. Please try again.');
     } finally {
         isDeleting.value = false;
     }
@@ -196,11 +199,8 @@ function canEditAnnotation(type: string): boolean {
 }
 
 function editAnnotation(annotation: Annotation) {
-    // Thiết lập chế độ chỉnh sửa cho chú thích
     if (annotation.id) {
         annotationStore.selectAnnotation(annotation.id);
-        // TODO: Triển khai chế độ chỉnh sửa
-        alert('Edit mode for annotation #' + annotation.id + ' not implemented yet');
     }
 }
 </script>

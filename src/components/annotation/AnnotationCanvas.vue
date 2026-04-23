@@ -623,6 +623,42 @@ function generateSimulatedPolygon(center: { x: number, y: number }) {
 // Current mouse position for drawing preview
 const currentMousePos = ref<{ x: number; y: number } | null>(null);
 
+// Hit-detection: find the topmost annotation containing the given image-space point
+function findAnnotationAtPoint(pt: { x: number; y: number }): (typeof annotationStore.annotations)[0] | null {
+    const HIT_RADIUS = 8 / scale.value; // 8px canvas tolerance in image space
+
+    for (let i = annotationStore.annotations.length - 1; i >= 0; i--) {
+        const ann = annotationStore.annotations[i];
+
+        if (ann.type === 'bbox') {
+            const { x, y, width, height } = ann.coordinates as any;
+            if (pt.x >= x - HIT_RADIUS && pt.x <= x + width + HIT_RADIUS &&
+                pt.y >= y - HIT_RADIUS && pt.y <= y + height + HIT_RADIUS) {
+                return ann;
+            }
+        } else if (ann.type === 'polygon') {
+            const points = ann.coordinates as Array<{ x: number; y: number }>;
+            // Point-in-polygon via ray casting
+            let inside = false;
+            for (let j = 0, k = points.length - 1; j < points.length; k = j++) {
+                const xi = points[j].x, yi = points[j].y;
+                const xk = points[k].x, yk = points[k].y;
+                if (((yi > pt.y) !== (yk > pt.y)) &&
+                    (pt.x < (xk - xi) * (pt.y - yi) / (yk - yi) + xi)) {
+                    inside = !inside;
+                }
+            }
+            if (inside) return ann;
+        } else if (ann.type === 'keypoint') {
+            const points = ann.coordinates as Array<{ x: number; y: number }>;
+            if (points.some(p => Math.hypot(p.x - pt.x, p.y - pt.y) <= HIT_RADIUS)) {
+                return ann;
+            }
+        }
+    }
+    return null;
+}
+
 // Mouse event handlers
 function onMouseDown(event: MouseEvent) {
     const rect = (event.target as HTMLElement).getBoundingClientRect();
@@ -640,8 +676,7 @@ function onMouseDown(event: MouseEvent) {
     } else if (tool === 'magic_wand') {
         // Sử dụng magic wand
         useMagicWand(x, y);
-    } else if (tool === 'bbox' || tool === 'polygon' || tool === 'keypoint') {
-        // Sử dụng các công cụ khác như trước
+    } else if (tool === 'bbox' || tool === 'keypoint') {
         annotationStore.startDrawing(imageCoords);
     }
 }
@@ -657,10 +692,11 @@ function onMouseMove(event: MouseEvent) {
     const tool = annotationStore.drawingState.currentTool;
 
     if ((tool === 'brush' || tool === 'eraser') && isDrawing.value) {
-        // Tiếp tục vẽ brush
         drawWithBrush(x, y);
+    } else if (tool === 'polygon' && annotationStore.drawingState.isDrawing) {
+        // Polygon preview uses currentMousePos directly — no need to mutate placed points
+        drawTemporaryAnnotation();
     } else if (annotationStore.drawingState.isDrawing) {
-        // Cập nhật trạng thái vẽ cho các công cụ khác
         const imageCoords = canvasToImageCoordinates(x, y);
         annotationStore.updateDrawing(imageCoords);
     }
@@ -718,12 +754,16 @@ function onClick(event: MouseEvent) {
     const tool = annotationStore.drawingState.currentTool;
 
     if (tool === 'polygon') {
-        // For polygon, add a point and continue drawing
-        annotationStore.addPoint(imageCoords);
-    } else if (tool === 'keypoint') {
-        // For keypoint, add a point and finish
-        annotationStore.startDrawing(imageCoords);
-        annotationStore.finishDrawing();
+        if (!annotationStore.drawingState.isDrawing) {
+            // First click: initialize the polygon
+            annotationStore.startDrawing(imageCoords);
+        } else {
+            // Subsequent clicks: add the next vertex
+            annotationStore.addPoint(imageCoords);
+        }
+    } else if (tool === 'select') {
+        const hit = findAnnotationAtPoint(imageCoords);
+        annotationStore.selectAnnotation(hit ? hit.id : null);
     }
 }
 

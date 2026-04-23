@@ -165,16 +165,13 @@
                     </div>
                 </div>
 
-                <!-- Thêm notification -->
-                <Notification :message="notification.message" :type="notification.type" :visible="notification.visible"
-                    @close="notification.visible = false" />
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, watch, reactive } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useImageStore } from '@/stores/image';
 import { useProjectStore } from '@/stores/project';
@@ -186,7 +183,7 @@ import ClassSelector from '@/components/annotation/ClassSelector.vue';
 import AnnotationList from '@/components/annotation/AnnotationList.vue';
 import type { DrawingTool } from '@/types/annotation';
 import { useAnnotationShortcuts } from '@/composables/useAnnotationShortcuts';
-import Notification from '@/components/common/Notification.vue';
+import { useToast } from '@/composables/useToast';
 import { UndoIcon, RedoIcon } from '@/components/annotation/icons';
 
 // Router and route
@@ -209,10 +206,11 @@ const projectType = computed(() => {
 // Current image state
 const currentImageId = ref<number | null>(null);
 
-const notification = reactive({
-    message: '',
-    type: 'info' as 'info' | 'success' | 'warning' | 'error',
-    visible: false
+const { show: showNotification, error: toastError } = useToast();
+
+// Surface annotation store errors as toasts
+watch(() => annotationStore.error, (err) => {
+    if (err) toastError(err);
 });
 
 // Tool settings
@@ -349,8 +347,7 @@ function setTool(tool: DrawingTool | null) {
             // Cập nhật UI của công cụ vẽ
             onToolChange(tool);
         } else if (!['select', 'move', 'zoom', 'pan'].includes(tool)) {
-            // Thông báo nếu chưa chọn lớp
-            alert('Please select a class first');
+            showNotification('Please select a class first', 'warning');
         }
     } else {
         // Hủy vẽ hiện tại
@@ -370,7 +367,7 @@ function onToolChange(tool: DrawingTool) {
             // Thiết lập công cụ trong annotation store
             annotationStore.setCurrentTool(tool as any);
         } else {
-            alert('Please select a class first');
+            showNotification('Please select a class first', 'warning');
             return;
         }
     } else {
@@ -386,12 +383,6 @@ function onToolSettingsChange(settings: any) {
     if (settings.type) {
         toolSettings.value[settings.type] = { ...settings };
     }
-}
-
-function showNotification(message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') {
-    notification.message = message;
-    notification.type = type;
-    notification.visible = true;
 }
 
 function getToolLabel(tool: string): string {

@@ -9,8 +9,13 @@
                         Dataset Name <span class="text-red-500">*</span>
                     </label>
                     <input id="datasetName" v-model="formData.name" required type="text"
-                        class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent"
-                        placeholder="Enter dataset name" />
+                        class="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent"
+                        :class="nameTouched && !formData.name.trim() ? 'border-red-400' : 'border-gray-300'"
+                        placeholder="Enter dataset name"
+                        @blur="nameTouched = true" />
+                    <p v-if="nameTouched && !formData.name.trim()" class="mt-1 text-xs text-red-600">
+                        Dataset name is required.
+                    </p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -32,6 +37,9 @@
                                 </label>
                             </div>
                         </div>
+                        <p v-if="!formData.includeAnnotated && !formData.includeUnlabeled" class="mt-1 text-xs text-red-600">
+                            Select at least one image type.
+                        </p>
                     </div>
 
                     <div>
@@ -309,6 +317,8 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['submit', 'cancel']);
+
+const nameTouched = ref(false);
 
 // Default form data
 const formData = reactive<DatasetCreateDTO>({

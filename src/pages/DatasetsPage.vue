@@ -46,6 +46,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useDatasetStore } from '@/stores/dataset';
 import { useProjectStore } from '@/stores/project';
+import { useToast } from '@/composables/useToast';
 import type { DatasetResponseDTO, DatasetCreateDTO, DatasetExportOptionsDTO } from '@/types/dataset';
 import Card from '@/components/common/Card.vue';
 import Modal from '@/components/common/Modal.vue';
@@ -58,6 +59,7 @@ const route = useRoute();
 const router = useRouter();
 const datasetStore = useDatasetStore();
 const projectStore = useProjectStore();
+const toast = useToast();
 
 // Get project ID from route
 const projectId = computed(() => Number(route.params.projectId));
@@ -93,8 +95,9 @@ const handleCreateDataset = async (data: DatasetCreateDTO) => {
                 datasetId: newDataset.id.toString()
             }
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Failed to create dataset:', error);
+        toast.error(error?.message || 'Failed to create dataset. Please try again.');
     }
 };
 
@@ -116,8 +119,10 @@ const openExportModal = (dataset: DatasetResponseDTO) => {
 const handleDeleteDataset = async (datasetId: number) => {
     try {
         await datasetStore.deleteDataset(datasetId);
-    } catch (error) {
+        toast.success('Dataset deleted successfully.');
+    } catch (error: any) {
         console.error('Failed to delete dataset:', error);
+        toast.error(error?.message || 'Failed to delete dataset. Please try again.');
     }
 };
 
@@ -140,8 +145,10 @@ const loadExportPreview = async (datasetId: number, format: string) => {
 const handleExportDataset = async (datasetId: number, options: DatasetExportOptionsDTO) => {
     try {
         await datasetStore.exportDataset(datasetId, options);
-    } catch (error) {
+        toast.success('Dataset exported successfully.');
+    } catch (error: any) {
         console.error('Failed to export dataset:', error);
+        toast.error(error?.message || 'Failed to export dataset. Please try again.');
     }
 };
 </script>

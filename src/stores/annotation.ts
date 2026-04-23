@@ -378,7 +378,7 @@ export const useAnnotationStore = defineStore('annotation', () => {
       }
     } else if (tool === 'polygon') {
       // For polygon, we update the last point while moving
-      if (drawingState.value.points.length > 0 && !drawingState.value.isDrawing) {
+      if (drawingState.value.points.length > 0 && drawingState.value.isDrawing) {
         drawingState.value.points[drawingState.value.points.length - 1] = point
       }
 

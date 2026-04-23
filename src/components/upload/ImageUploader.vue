@@ -115,8 +115,11 @@
 import { ref, computed, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useImageStore } from '@/stores/image';
+import { useToast } from '@/composables/useToast';
 import { v4 as uuidv4 } from 'uuid';
 import type { TempImage } from '@/types/image';
+
+const toast = useToast();
 
 const route = useRoute();
 const imageStore = useImageStore();
@@ -180,7 +183,7 @@ const addTempImages = (files: File[]) => {
     });
 
     if (validFiles.length === 0) {
-        alert('No valid files selected. Please check file types and sizes.');
+        toast.warning('No valid files selected. Please check file types and sizes.');
         return;
     }
 
@@ -248,7 +251,7 @@ const uploadAllImages = async () => {
         emit('upload-complete');
     } catch (error) {
         console.error('Failed to upload images:', error);
-        alert('Failed to upload images. Please try again.');
+        toast.error('Failed to upload images. Please try again.');
     } finally {
         isUploading.value = false;
         uploadProgress.value = 0;

@@ -123,6 +123,9 @@ import { useAnnotationStore } from '@/stores/annotation';
 import classService from '@/services/classService';
 import Modal from '@/components/common/Modal.vue';
 import Button from '@/components/common/Button.vue';
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 import type { ClassResponseDTO, ClassCreateDTO, ClassUpdateDTO } from '@/types/class';
 
 const props = defineProps<{
@@ -179,7 +182,7 @@ async function createClass() {
         showAddClassForm.value = false;
     } catch (error) {
         console.error('Failed to create class:', error);
-        alert('Failed to create class. Please try again.');
+        toast.error('Failed to create class. Please try again.');
     } finally {
         isLoading.value = false;
     }
@@ -213,7 +216,7 @@ async function updateClass() {
         editingClass.value = null;
     } catch (error) {
         console.error('Failed to update class:', error);
-        alert('Failed to update class. Please try again.');
+        toast.error('Failed to update class. Please try again.');
     } finally {
         isLoading.value = false;
     }
@@ -245,7 +248,7 @@ async function executeDeleteClass() {
         classToDelete.value = null;
     } catch (error) {
         console.error('Failed to delete class:', error);
-        alert('Failed to delete class. Please try again.');
+        toast.error('Failed to delete class. Please try again.');
     } finally {
         isDeleting.value = false;
     }

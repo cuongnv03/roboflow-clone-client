@@ -2,7 +2,9 @@ import axios from 'axios'
 import type { Image, ImageUploadOptions, UploadResponse } from '@/types/image'
 
 type ProgressCallback = (progress: number) => void
-const SERVER_URL = 'http://localhost:5000'
+
+const apiBase = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:5000/api/v1'
+const SERVER_URL = apiBase.replace(/\/api\/v1\/?$/, '')
 
 // Upload a single image
 const uploadImage = async (
@@ -179,7 +181,7 @@ const deleteImage = async (projectId: number, imageId: number): Promise<void> =>
   }
 }
 
-// Update image metadata (tags, status)
+// Update image status (tags are client-side only and not persisted to server)
 const updateImageMetadata = async (
   projectId: number,
   imageId: number,
@@ -188,20 +190,25 @@ const updateImageMetadata = async (
     status?: 'uploaded' | 'annotated' | 'processed'
   },
 ): Promise<Image> => {
+  if (!metadata.status) {
+    // tags-only update: no server call needed, return current image
+    return getImageById(projectId, imageId)
+  }
+
   try {
     const response = await axios.patch<{ status: string; message: string; data: any }>(
-      `/projects/${projectId}/images/${imageId}/metadata`,
-      metadata,
+      `/projects/${projectId}/images/${imageId}/status`,
+      { status: metadata.status },
     )
 
     if (response.data.status === 'success' && response.data.data) {
       return transformImage(response.data.data)
     }
 
-    throw new Error(response.data.message || 'Failed to update image metadata')
+    throw new Error(response.data.message || 'Failed to update image status')
   } catch (error: any) {
     if (error.response) {
-      throw new Error(error.response.data.message || 'Failed to update image metadata')
+      throw new Error(error.response.data.message || 'Failed to update image status')
     }
     throw error
   }
