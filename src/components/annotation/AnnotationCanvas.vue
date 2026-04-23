@@ -763,7 +763,7 @@ function onClick(event: MouseEvent) {
         }
     } else if (tool === 'select') {
         const hit = findAnnotationAtPoint(imageCoords);
-        annotationStore.selectAnnotation(hit ? hit.id : null);
+        annotationStore.selectAnnotation(hit ? (hit.id ?? null) : null);
     }
 }
 

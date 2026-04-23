@@ -95,7 +95,7 @@ export interface AnnotationCreateParams {
 // For tracking temporary annotations being drawn
 export interface DrawingState {
   isDrawing: boolean
-  currentTool: AnnotationType | null
+  currentTool: DrawingTool | null
   points: Array<{ x: number; y: number }>
   startPoint: { x: number; y: number } | null
   temporaryAnnotation: Partial<Annotation> | null

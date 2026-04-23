@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import annotationService from '@/services/annotationService'
 import classService from '@/services/classService'
-import type { Annotation, AnnotationType, DrawingState } from '@/types/annotation'
+import type { Annotation, AnnotationType, DrawingTool, DrawingState } from '@/types/annotation'
 import type { ClassResponseDTO } from '@/types/class'
 
 // Định nghĩa kiểu thao tác lịch sử
@@ -333,7 +333,7 @@ export const useAnnotationStore = defineStore('annotation', () => {
   }
 
   // Drawing state management
-  function setCurrentTool(tool: AnnotationType | null): void {
+  function setCurrentTool(tool: DrawingTool | null): void {
     drawingState.value.currentTool = tool
     // Reset drawing state when changing tools
     if (tool !== null) {
