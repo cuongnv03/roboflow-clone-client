@@ -23,22 +23,15 @@
                             :class="isActive('projects') ? 'border-brand-purple text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'">
                             Projects
                         </router-link>
-                        <router-link to="/datasets"
-                            class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-full"
-                            :class="isActive('datasets') ? 'border-brand-purple text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'">
-                            Datasets
-                        </router-link>
-                        <a href="#"
-                            class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 h-full">
-                            Documentation
-                        </a>
                     </div>
                 </div>
 
                 <!-- User Menu -->
                 <div class="flex items-center">
                     <div v-if="authStore.isAuthenticated" class="flex items-center space-x-4">
-                        <span class="text-sm text-gray-600">{{ authStore.currentUser?.username }}</span>
+                        <router-link to="/profile" class="text-sm text-gray-600 hover:text-brand-purple transition-colors">
+                            {{ authStore.currentUser?.username }}
+                        </router-link>
                         <button @click="logout" class="btn btn-outline text-sm py-1 px-3">
                             Log Out
                         </button>
@@ -79,15 +72,6 @@
                     @click="mobileMenuOpen = false">
                     Projects
                 </router-link>
-                <router-link to="/datasets" class="block pl-3 pr-4 py-2 text-base font-medium border-l-4"
-                    :class="isActive('datasets') ? 'bg-brand-purple bg-opacity-10 border-brand-purple text-brand-purple' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'"
-                    @click="mobileMenuOpen = false">
-                    Datasets
-                </router-link>
-                <a href="#"
-                    class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800">
-                    Documentation
-                </a>
             </div>
         </div>
     </nav>

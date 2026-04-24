@@ -40,7 +40,8 @@
 
             <!-- Project List -->
             <ProjectsList :projects="projectStore.projects" :is-loading="projectStore.isLoading"
-                @create="showCreateProjectForm = true" @edit="openEditModal" @delete="confirmDeleteProject" />
+                :stats-map="statsMap" @create="showCreateProjectForm = true" @edit="openEditModal"
+                @delete="confirmDeleteProject" />
         </div>
 
         <!-- Edit Project Modal -->
@@ -74,7 +75,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useProjectStore } from '@/stores/project';
-import type { Project, ProjectType } from '@/types/project';
+import projectService from '@/services/projectService';
+import { useToast } from '@/composables/useToast';
+import type { Project, ProjectType, ProjectStats } from '@/types/project';
 import DefaultLayout from '@/layouts/DefaultLayout.vue';
 import ProjectsList from '@/components/projects/ProjectsList.vue';
 import ProjectForm from '@/components/projects/ProjectForm.vue';
@@ -84,6 +87,7 @@ import Card from '@/components/common/Card.vue';
 
 // Store
 const projectStore = useProjectStore();
+const toast = useToast();
 
 // State
 const showCreateProjectForm = ref(false);
@@ -91,6 +95,7 @@ const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 const projectToEdit = ref<Project | null>(null);
 const projectToDelete = ref<Project | null>(null);
+const statsMap = ref<Record<number, ProjectStats>>({});
 
 // Lifecycle hooks
 onMounted(async () => {
@@ -100,14 +105,25 @@ onMounted(async () => {
 // Methods
 const fetchProjects = async () => {
     await projectStore.fetchProjects();
+    // Fetch stats for all projects in parallel (fire-and-forget, non-blocking)
+    const results = await Promise.allSettled(
+        projectStore.projects.map(p => projectService.getProjectStats(p.id))
+    );
+    const map: Record<number, ProjectStats> = {};
+    results.forEach((result, i) => {
+        if (result.status === 'fulfilled') {
+            map[projectStore.projects[i].id] = result.value;
+        }
+    });
+    statsMap.value = map;
 };
 
 const handleCreateProject = async (data: { name: string; description: string; type: ProjectType }) => {
     try {
         await projectStore.createProject(data);
         showCreateProjectForm.value = false;
-    } catch (err) {
-        console.error('Failed to create project:', err);
+    } catch (err: any) {
+        toast.error(err?.message || 'Failed to create project.');
     }
 };
 
@@ -125,8 +141,8 @@ const handleUpdateProject = async (data: { name: string; description: string; ty
             description: data.description
         });
         showEditModal.value = false;
-    } catch (err) {
-        console.error('Failed to update project:', err);
+    } catch (err: any) {
+        toast.error(err?.message || 'Failed to update project.');
     }
 };
 
@@ -145,8 +161,8 @@ const executeDeleteProject = async () => {
         await projectStore.deleteProject(projectToDelete.value.id);
         showDeleteModal.value = false;
         projectToDelete.value = null;
-    } catch (err) {
-        console.error('Failed to delete project:', err);
+    } catch (err: any) {
+        toast.error(err?.message || 'Failed to delete project.');
     }
 };
 </script>

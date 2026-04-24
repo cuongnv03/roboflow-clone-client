@@ -14,6 +14,7 @@ import DatasetsPage from '@/pages/DatasetsPage.vue'
 import NotFoundPage from '@/pages/NotFoundPage.vue'
 import HomePage from '@/pages/HomePage.vue'
 import DatasetViewPage from '@/pages/DatasetViewPage.vue'
+import ProfilePage from '@/pages/ProfilePage.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -32,6 +33,12 @@ const routes: Array<RouteRecordRaw> = [
     path: '/projects',
     name: 'projects',
     component: ProjectsPage,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/profile',
+    name: 'profile',
+    component: ProfilePage,
     meta: { requiresAuth: true },
   },
   {

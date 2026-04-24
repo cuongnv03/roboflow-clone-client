@@ -2,8 +2,25 @@
     <div class="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
         <div class="p-5">
             <h3 class="text-lg font-semibold text-gray-800 mb-1 truncate">{{ project.name }}</h3>
-            <p class="text-sm text-gray-500 mb-3 capitalize">{{ formatProjectType(project.type) }}</p>
-            <p class="text-sm text-gray-600 mb-4 line-clamp-2 h-10">
+            <p class="text-sm text-gray-500 mb-2 capitalize">{{ formatProjectType(project.type) }}</p>
+
+            <!-- Stats row -->
+            <div v-if="stats" class="flex items-center space-x-3 mb-3">
+                <span class="text-xs text-gray-500">
+                    {{ stats.totalImages }} image{{ stats.totalImages !== 1 ? 's' : '' }}
+                </span>
+                <span class="text-gray-300 text-xs">·</span>
+                <span class="text-xs font-medium" :class="annotatedPct === 100 ? 'text-green-600' : 'text-gray-500'">
+                    {{ annotatedPct }}% annotated
+                </span>
+                <span v-if="stats.totalImages > 0" class="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-green-500 rounded-full transition-all"
+                        :style="`width: ${annotatedPct}%`"></div>
+                </span>
+            </div>
+            <div v-else class="mb-3 h-4"></div>
+
+            <p class="text-sm text-gray-600 line-clamp-2 h-10">
                 {{ project.description || 'No description provided.' }}
             </p>
         </div>
@@ -29,14 +46,20 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue';
-import type { Project } from '@/types/project';
+import { computed } from 'vue';
+import type { Project, ProjectStats } from '@/types/project';
 
 const props = defineProps<{
-    project: Project
+    project: Project;
+    stats?: ProjectStats;
 }>();
 
-const emit = defineEmits(['edit', 'delete']);
+defineEmits(['edit', 'delete']);
+
+const annotatedPct = computed(() => {
+    if (!props.stats || props.stats.totalImages === 0) return 0;
+    return Math.round((props.stats.annotatedImages / props.stats.totalImages) * 100);
+});
 
 const formatProjectType = (type: string | undefined) => {
     if (!type) return 'N/A';

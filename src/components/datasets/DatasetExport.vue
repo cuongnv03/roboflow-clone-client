@@ -144,7 +144,7 @@ import Button from '@/components/common/Button.vue';
 import Modal from '@/components/common/Modal.vue';
 import type { DatasetExportOptionsDTO, DatasetExportResultDTO } from '@/types/dataset';
 
-const SERVER_URL = 'http://localhost:5000';
+const SERVER_URL = (import.meta.env.VITE_API_URL as string || 'http://localhost:5000/api/v1').replace(/\/api\/v1\/?$/, '');
 
 const props = defineProps<{
     datasetId: number;
@@ -217,14 +217,16 @@ watch(() => props.exportResult, (newResult) => {
     }
 });
 
+// Auto-select first format whenever the list becomes available
+watch(() => props.availableFormats, (formats) => {
+    if (formats.length > 0 && !selectedFormat.value) {
+        selectedFormat.value = formats[0];
+    }
+}, { immediate: true });
+
 // Load formats on mount
 onMounted(() => {
     emit('load-formats', props.projectType);
-
-    // Set default format if available
-    if (props.availableFormats.length > 0 && !selectedFormat.value) {
-        selectedFormat.value = props.availableFormats[0];
-    }
 });
 
 // Methods

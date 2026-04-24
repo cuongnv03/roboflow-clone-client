@@ -578,8 +578,6 @@ function useMagicWand(x: number, y: number) {
     // Phần này sẽ cần một thuật toán flood fill hoặc region growing
     // Có thể sử dụng thư viện như FloodFill hoặc triển khai riêng
 
-    console.log('Magic wand at:', magicWandSeedPoint.value, 'with tolerance:', tolerance, 'contiguous:', contiguous);
-
     // Sau khi có kết quả, tạo chú thích polygon từ đường viền
     const simulatedPolygon = generateSimulatedPolygon(magicWandSeedPoint.value);
 
@@ -717,8 +715,6 @@ function onMouseUp(event: MouseEvent) {
             // Tạo chú thích mới
             // Lưu ý: Phần này phức tạp hơn nhiều trong triển khai thực tế
             // Bạn cần lưu dữ liệu mask hoặc chuyển đổi thành polygon
-            console.log('Saving brush stroke:', imageData.slice(0, 100) + '...');
-
             // Xóa canvas sau khi lưu
             if (brushContext.value) {
                 brushContext.value.clearRect(0, 0, brushCanvas.value.width, brushCanvas.value.height);

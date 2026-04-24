@@ -3,14 +3,12 @@ export type ProjectType =
   | 'classification'
   | 'instance_segmentation'
   | 'keypoint_detection'
-  | 'multimodal'
 
 export const PROJECT_TYPES: ProjectType[] = [
   'object_detection',
   'classification',
   'instance_segmentation',
   'keypoint_detection',
-  'multimodal',
 ]
 
 export interface Project {

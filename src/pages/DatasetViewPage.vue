@@ -20,6 +20,12 @@
                     <TrashIcon class="h-4 w-4 mr-1" />
                     Delete
                 </Button>
+                <Button v-if="datasetStore.activeDataset?.status !== 'completed'"
+                    variant="outline" @click="handleGenerateDataset"
+                    :loading="generateLoading" loading-text="Generating...">
+                    <RefreshIcon class="h-4 w-4 mr-1" />
+                    Generate
+                </Button>
                 <Button variant="primary" @click="openExportModal">
                     <ExportIcon class="h-4 w-4 mr-1" />
                     Export
@@ -306,7 +312,7 @@
                                 <label for="trainSplit" class="block text-xs text-gray-500">Train</label>
                                 <div class="flex items-center">
                                     <input id="trainSplit" v-model.number="splitRatio.train" type="number" min="0"
-                                        max="1" step="0.05"
+                                        max="100" step="5"
                                         class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent"
                                         @input="updateSplitRatio('train')" />
                                     <span class="ml-1 text-gray-500">%</span>
@@ -316,7 +322,7 @@
                                 <label for="validSplit" class="block text-xs text-gray-500">Validation</label>
                                 <div class="flex items-center">
                                     <input id="validSplit" v-model.number="splitRatio.valid" type="number" min="0"
-                                        max="1" step="0.05"
+                                        max="100" step="5"
                                         class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent"
                                         @input="updateSplitRatio('valid')" />
                                     <span class="ml-1 text-gray-500">%</span>
@@ -325,8 +331,8 @@
                             <div>
                                 <label for="testSplit" class="block text-xs text-gray-500">Test</label>
                                 <div class="flex items-center">
-                                    <input id="testSplit" v-model.number="splitRatio.test" type="number" min="0" max="1"
-                                        step="0.05"
+                                    <input id="testSplit" v-model.number="splitRatio.test" type="number" min="0"
+                                        max="100" step="5"
                                         class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent"
                                         @input="updateSplitRatio('test')" />
                                     <span class="ml-1 text-gray-500">%</span>
@@ -336,13 +342,13 @@
                         <div class="mt-1">
                             <div class="w-full bg-gray-200 rounded-full h-2.5 mb-1">
                                 <div class="flex h-2.5 rounded-full overflow-hidden">
-                                    <div class="bg-blue-600" :style="`width: ${splitRatio.train * 100}%`"></div>
-                                    <div class="bg-green-500" :style="`width: ${splitRatio.valid * 100}%`"></div>
-                                    <div class="bg-purple-500" :style="`width: ${splitRatio.test * 100}%`"></div>
+                                    <div class="bg-blue-600" :style="`width: ${splitRatio.train}%`"></div>
+                                    <div class="bg-green-500" :style="`width: ${splitRatio.valid}%`"></div>
+                                    <div class="bg-purple-500" :style="`width: ${splitRatio.test}%`"></div>
                                 </div>
                             </div>
-                            <p :class="splitTotal === 1 ? 'text-green-600' : 'text-red-600'" class="text-xs text-right">
-                                Total: {{ (splitTotal * 100).toFixed(0) }}%
+                            <p :class="splitTotal === 100 ? 'text-green-600' : 'text-red-600'" class="text-xs text-right">
+                                Total: {{ splitTotal }}%
                             </p>
                         </div>
                     </div>
@@ -355,7 +361,7 @@
                         Cancel
                     </Button>
                     <Button @click="executeSplitGeneration" variant="primary"
-                        :disabled="splitStrategy === 'random' && splitTotal !== 1" :loading="splitGenerationLoading"
+                        :disabled="splitStrategy === 'random' && splitTotal !== 100" :loading="splitGenerationLoading"
                         loading-text="Generating...">
                         Generate Splits
                     </Button>
@@ -371,6 +377,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { format } from 'date-fns';
 import { useDatasetStore } from '@/stores/dataset';
 import { useProjectStore } from '@/stores/project';
+import { useImageStore } from '@/stores/image';
+import { useToast } from '@/composables/useToast';
 import type { DatasetSplitDTO, DatasetImageAssignDTO, DatasetExportOptionsDTO } from '@/types/dataset';
 import Card from '@/components/common/Card.vue';
 import Button from '@/components/common/Button.vue';
@@ -384,6 +392,8 @@ const route = useRoute();
 const router = useRouter();
 const datasetStore = useDatasetStore();
 const projectStore = useProjectStore();
+const imageStore = useImageStore();
+const toast = useToast();
 
 // IDs from route
 const projectId = computed(() => Number(route.params.projectId));
@@ -400,13 +410,14 @@ const showDeleteConfirm = ref(false);
 const showSplitModal = ref(false);
 const deleteLoading = ref(false);
 const splitGenerationLoading = ref(false);
+const generateLoading = ref(false);
 
 // Split regeneration state
 const splitStrategy = ref<'random' | 'manual'>('random');
 const splitRatio = ref({
-    train: 0.7,
-    valid: 0.2,
-    test: 0.1
+    train: 70,
+    valid: 20,
+    test: 10
 });
 
 // Computed properties
@@ -430,6 +441,9 @@ const hasAnyPreprocessingSettings = computed(() => {
 onMounted(async () => {
     if (datasetId.value) {
         await datasetStore.fetchDataset(datasetId.value);
+    }
+    if (projectId.value) {
+        imageStore.fetchProjectImages(projectId.value);
     }
 });
 
@@ -511,11 +525,11 @@ const executeDeleteDataset = async () => {
 
         // Navigate back to datasets list
         router.push({
-            name: 'project-datasets',
+            name: 'project-dataset',
             params: { projectId: projectId.value }
         });
-    } catch (error) {
-        console.error('Failed to delete dataset:', error);
+    } catch (error: any) {
+        toast.error(error?.message || 'Failed to delete dataset.');
     } finally {
         deleteLoading.value = false;
     }
@@ -525,30 +539,35 @@ const regenerateSplits = () => {
     showSplitModal.value = true;
 };
 
+const handleGenerateDataset = async () => {
+    if (!datasetId.value) return;
+    generateLoading.value = true;
+    try {
+        await datasetStore.generateDataset(datasetId.value);
+        toast.success('Dataset generated — images marked as processed.');
+    } catch (error: any) {
+        toast.error(error?.message || 'Failed to generate dataset.');
+    } finally {
+        generateLoading.value = false;
+    }
+};
+
 const updateSplitRatio = (field: 'train' | 'valid' | 'test') => {
     const total = splitTotal.value;
 
-    // If total is greater than 1, adjust other fields proportionally
-    if (total > 1) {
-        const excess = total - 1;
+    // If total exceeds 100, reduce other fields proportionally
+    if (total > 100) {
+        const excess = total - 100;
         const otherFields = ['train', 'valid', 'test'].filter(f => f !== field) as Array<'train' | 'valid' | 'test'>;
-
-        // Distribute excess proportionally between other fields
         const totalOthers = otherFields.reduce((sum, f) => sum + splitRatio.value[f], 0);
 
         if (totalOthers > 0) {
             otherFields.forEach(f => {
                 const proportion = splitRatio.value[f] / totalOthers;
-                splitRatio.value[f] = Math.max(0, splitRatio.value[f] - excess * proportion);
+                splitRatio.value[f] = Math.max(0, Math.round(splitRatio.value[f] - excess * proportion));
             });
         }
     }
-
-    // Round to 2 decimal places
-    Object.keys(splitRatio.value).forEach(key => {
-        splitRatio.value[key as keyof typeof splitRatio.value] =
-            Math.round(splitRatio.value[key as keyof typeof splitRatio.value] * 100) / 100;
-    });
 };
 
 const executeSplitGeneration = async () => {
@@ -563,16 +582,16 @@ const executeSplitGeneration = async () => {
 
         if (splitStrategy.value === 'random') {
             splitConfig.ratio = {
-                train: splitRatio.value.train,
-                valid: splitRatio.value.valid,
-                test: splitRatio.value.test
+                train: splitRatio.value.train / 100,
+                valid: splitRatio.value.valid / 100,
+                test: splitRatio.value.test / 100
             };
         }
 
         await datasetStore.generateSplit(datasetId.value, splitConfig);
         showSplitModal.value = false;
-    } catch (error) {
-        console.error('Failed to generate splits:', error);
+    } catch (error: any) {
+        toast.error(error?.message || 'Failed to generate splits.');
     } finally {
         splitGenerationLoading.value = false;
     }
@@ -583,32 +602,32 @@ const handleUpdateSplits = async (assignData: DatasetImageAssignDTO) => {
 
     try {
         await datasetStore.assignImagesToSplit(datasetId.value, assignData);
-    } catch (error) {
-        console.error('Failed to update splits:', error);
+    } catch (error: any) {
+        toast.error(error?.message || 'Failed to move images to split.');
     }
 };
 
 const loadExportFormats = async (projectType: string) => {
     try {
         await datasetStore.fetchExportFormats(projectType);
-    } catch (error) {
-        console.error('Failed to load export formats:', error);
+    } catch (error: any) {
+        toast.error(error?.message || 'Failed to load export formats.');
     }
 };
 
 const loadExportPreview = async (datasetId: number, format: string) => {
     try {
         await datasetStore.fetchExportPreview(datasetId, format);
-    } catch (error) {
-        console.error('Failed to load export preview:', error);
+    } catch (error: any) {
+        toast.error(error?.message || 'Failed to load export preview.');
     }
 };
 
 const handleExportDataset = async (datasetId: number, options: DatasetExportOptionsDTO) => {
     try {
         await datasetStore.exportDataset(datasetId, options);
-    } catch (error) {
-        console.error('Failed to export dataset:', error);
+    } catch (error: any) {
+        toast.error(error?.message || 'Failed to export dataset.');
     }
 };
 </script>

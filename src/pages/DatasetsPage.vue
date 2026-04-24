@@ -96,7 +96,6 @@ const handleCreateDataset = async (data: DatasetCreateDTO) => {
             }
         });
     } catch (error: any) {
-        console.error('Failed to create dataset:', error);
         toast.error(error?.message || 'Failed to create dataset. Please try again.');
     }
 };
@@ -121,7 +120,6 @@ const handleDeleteDataset = async (datasetId: number) => {
         await datasetStore.deleteDataset(datasetId);
         toast.success('Dataset deleted successfully.');
     } catch (error: any) {
-        console.error('Failed to delete dataset:', error);
         toast.error(error?.message || 'Failed to delete dataset. Please try again.');
     }
 };
@@ -129,16 +127,16 @@ const handleDeleteDataset = async (datasetId: number) => {
 const loadExportFormats = async (projectType: string) => {
     try {
         await datasetStore.fetchExportFormats(projectType);
-    } catch (error) {
-        console.error('Failed to load export formats:', error);
+    } catch (error: any) {
+        toast.error(error?.message || 'Failed to load export formats.');
     }
 };
 
 const loadExportPreview = async (datasetId: number, format: string) => {
     try {
         await datasetStore.fetchExportPreview(datasetId, format);
-    } catch (error) {
-        console.error('Failed to load export preview:', error);
+    } catch (error: any) {
+        toast.error(error?.message || 'Failed to load export preview.');
     }
 };
 
@@ -147,7 +145,6 @@ const handleExportDataset = async (datasetId: number, options: DatasetExportOpti
         await datasetStore.exportDataset(datasetId, options);
         toast.success('Dataset exported successfully.');
     } catch (error: any) {
-        console.error('Failed to export dataset:', error);
         toast.error(error?.message || 'Failed to export dataset. Please try again.');
     }
 };

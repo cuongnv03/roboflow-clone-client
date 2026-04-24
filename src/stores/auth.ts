@@ -86,6 +86,27 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const updateProfile = async (data: {
+    username?: string
+    email?: string
+    password?: string
+  }): Promise<void> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const updatedUser = await authService.updateProfile(data)
+      user.value = updatedUser
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+    } catch (err: any) {
+      const message = err.message || 'Failed to update profile'
+      error.value = { message }
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   const logout = (): void => {
     authService.logout()
     setAuthData(null, null)
@@ -141,6 +162,7 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     checkAuth,
     fetchUserProfile,
+    updateProfile,
     setAuthData,
   }
 })

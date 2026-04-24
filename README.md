@@ -1,6 +1,6 @@
 # roboflow-clone-client
 
-Vue 3 frontend for the Roboflow Clone — a computer vision data management platform. Supports image upload, canvas-based annotation (bbox, polygon, keypoint), dataset version management, and multi-format export.
+Vue 3 frontend for the Roboflow Clone - a computer vision data management platform. Supports image upload, canvas-based annotation (bbox, polygon, keypoint), dataset version management, and multi-format export.
 
 **Stack:** Vue 3 · Vite · TypeScript · Pinia · Tailwind CSS · Vue Router
 
@@ -43,7 +43,7 @@ src/
 ├── stores/          # Pinia stores: auth, project, image, annotation, dataset
 ├── services/        # Axios wrappers (one file per domain, all use VITE_API_URL as baseURL)
 ├── composables/     # Shared logic: useToast, useAnnotationShortcuts
-├── router/          # Vue Router — auth guard redirects to /login on 401
+├── router/          # Vue Router - auth guard redirects to /login on 401
 └── layouts/         # DefaultLayout, ProjectLayout (sidebar), AuthLayout
 ```
 
@@ -51,7 +51,7 @@ src/
 
 **Canvas annotation:** `AnnotationCanvas.vue` uses four stacked `<canvas>` layers (image, annotation, brush, drawing). Annotation state (including undo/redo history) lives in the `annotation` Pinia store. Keyboard shortcuts are managed by `useAnnotationShortcuts`.
 
-**Toast notifications:** Global singleton via `useToast` composable. The `Notification` component is mounted once in `App.vue` and driven by reactive state — any component can call `toast.success()`, `toast.error()`, etc. without props.
+**Toast notifications:** Global singleton via `useToast` composable. The `Notification` component is mounted once in `App.vue` and driven by reactive state - any component can call `toast.success()`, `toast.error()`, etc. without props.
 
 ---
 

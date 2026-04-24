@@ -60,7 +60,7 @@
                             <select v-model="currentImageId"
                                 class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-purple">
                                 <option v-for="img in imageStore.images" :key="img.id" :value="img.id">
-                                    {{ img.originalFilename }}
+                                    {{ img.status === 'annotated' ? '✓' : img.status === 'processed' ? '★' : '○' }} {{ img.originalFilename }}
                                 </option>
                             </select>
 
@@ -87,7 +87,11 @@
                     <div v-if="currentImage" class="flex items-center space-x-2">
                         <span>{{ currentImage.width }}×{{ currentImage.height }}</span>
                         <span class="text-gray-300">|</span>
-                        <span>{{ formatStatus(currentImage.status) }}</span>
+                        <span :class="{
+                            'text-green-600': currentImage.status === 'annotated',
+                            'text-blue-600': currentImage.status === 'processed',
+                            'text-gray-400': currentImage.status === 'uploaded'
+                        }">{{ formatStatus(currentImage.status) }}</span>
                     </div>
 
                     <div class="flex items-center space-x-4">
@@ -357,7 +361,6 @@ function setTool(tool: DrawingTool | null) {
 }
 
 function onToolChange(tool: DrawingTool) {
-    console.log('Tool changed to:', tool);
     // Các công cụ chú thích
     if (['bbox', 'polygon', 'brush', 'eraser', 'magic_wand', 'keypoint', 'skeleton', 'classification'].includes(tool)) {
         if (annotationStore.selectedClass) {
@@ -378,8 +381,6 @@ function onToolChange(tool: DrawingTool) {
 }
 
 function onToolSettingsChange(settings: any) {
-    console.log('Tool settings changed:', settings);
-
     if (settings.type) {
         toolSettings.value[settings.type] = { ...settings };
     }
@@ -417,9 +418,8 @@ async function updateAnnotationClass() {
             annotationStore.selectedAnnotation.id as number,
             { classId: selectedAnnotationClass.value }
         );
-    } catch (error) {
-        console.error('Failed to update annotation class:', error);
-        // Khôi phục giá trị trước đó
+    } catch (error: any) {
+        toastError(error?.message || 'Failed to update annotation class.');
         selectedAnnotationClass.value = annotationStore.selectedAnnotation.classId;
     }
 }
@@ -440,9 +440,8 @@ async function updateKeypointVisibility() {
                 } as any
             );
         }
-    } catch (error) {
-        console.error('Failed to update keypoint visibility:', error);
-        // Khôi phục giá trị trước đó
+    } catch (error: any) {
+        toastError(error?.message || 'Failed to update keypoint visibility.');
         keypointVisible.value = !keypointVisible.value;
     }
 }
@@ -470,9 +469,8 @@ async function updateBboxDimensions() {
                 } as any
             );
         }
-    } catch (error) {
-        console.error('Failed to update bbox dimensions:', error);
-        // Khôi phục giá trị trước đó từ annotation
+    } catch (error: any) {
+        toastError(error?.message || 'Failed to update bbox dimensions.');
         const ann = annotationStore.selectedAnnotation;
         if (ann && ann.type === 'bbox') {
             bboxWidth.value = ann.coordinates.width;

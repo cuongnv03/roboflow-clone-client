@@ -184,8 +184,6 @@ const moveSelectedImages = async (targetSplit: string) => {
             split: targetSplit
         });
 
-        // Show success message or feedback
-        console.log(`Moved ${selectedImages.value.length} images to ${targetSplit} split`);
     } catch (error) {
         // Handle error
         console.error('Failed to move images:', error);

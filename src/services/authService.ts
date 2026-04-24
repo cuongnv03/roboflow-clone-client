@@ -93,6 +93,24 @@ const fetchUserProfile = async (): Promise<User | null> => {
   }
 }
 
+// Update user profile
+const updateProfile = async (data: {
+  username?: string
+  email?: string
+  password?: string
+}): Promise<User> => {
+  const response = await axios.put<{ status: string; message?: string; data?: User }>(
+    '/users/profile',
+    data,
+  )
+
+  if (response.data.status === 'success' && response.data.data) {
+    return response.data.data
+  }
+
+  throw new Error(response.data.message || 'Failed to update profile')
+}
+
 // Logout - no server call needed with JWT
 const logout = (): void => {
   delete axios.defaults.headers.common['Authorization']
@@ -103,5 +121,6 @@ export default {
   login,
   register,
   fetchUserProfile,
+  updateProfile,
   logout,
 }
