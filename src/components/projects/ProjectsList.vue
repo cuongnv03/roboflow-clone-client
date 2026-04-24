@@ -2,7 +2,7 @@
     <div>
         <div v-if="projects && projects.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <ProjectCard v-for="project in projects" :key="project.id" :project="project"
-                :stats="statsMap[project.id]" @edit="$emit('edit', project)"
+                :stats="statsMap?.[project.id]" @edit="$emit('edit', project)"
                 @delete="$emit('delete', project.id)" />
         </div>
 
@@ -32,7 +32,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue';
 import type { Project, ProjectStats } from '@/types/project';
 import ProjectCard from './ProjectCard.vue';
 
