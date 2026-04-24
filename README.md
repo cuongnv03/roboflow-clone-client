@@ -57,4 +57,4 @@ src/
 
 ## Running with Docker
 
-See the server repository's README for the full Docker Compose setup, which starts both frontend and backend together.
+See the [server repository](https://github.com/cuongnv03/roboflow-clone-server)'s README for the full Docker Compose setup, which starts both frontend and backend together.
